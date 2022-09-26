@@ -33,7 +33,7 @@ class UserController {
                 if (users) {
                     res.status(200).json(ApiResponse.returnSucess(users));
                 } else {
-                    res.status(403).json(ApiResponse.returnError('Dados incorretos ou inválidos.'))
+                    res.status(400).json(ApiResponse.returnError('Dados incorretos ou inválidos.'))
                 }
             }
         });
