@@ -24,6 +24,14 @@ class ApiResponse {
             dados: null,
         }
     }
+
+    static unknownError(error) {
+        return {
+            statusProcess: false,
+            message: `Ocorreu um erro desconhecido ${error}`,
+            dados: null,
+        }
+    }
 }
 
 export default ApiResponse;
