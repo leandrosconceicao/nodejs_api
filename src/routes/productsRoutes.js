@@ -6,8 +6,8 @@ const router = express.Router();
 
 router
     .get(endpoints.products, ProductController.findAll)
-    .post(endpoints.products, ProductController.pushProduct)
-    .put(endpoints.products, ProductController.updateProduct)
+    .post(endpoints.products, ProductController.addProduct)
+    .put(endpoints.products, ProductController.update)
     .delete(endpoints.products, ProductController.deleteProduct)
 
 export default router;

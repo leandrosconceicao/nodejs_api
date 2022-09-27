@@ -32,6 +32,14 @@ class ApiResponse {
             dados: null,
         }
     }
+
+    static parameterNotFound(message) {
+        return {
+            statusProcess: false,
+            message: `Parametro obrigatório não foi informado ${message}`,
+            dados: null,
+        }
+    }
 }
 
 export default ApiResponse;

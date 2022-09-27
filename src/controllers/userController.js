@@ -14,19 +14,37 @@ class UserController {
         })
     }
 
+    static delete = (req, res) => {
+        let id = req.body.id;
+        users.findByIdAndDelete(id, (err) => {
+            if (err) {
+                res.status(500).json(ApiResponse.dbError(err));
+            } else {
+                res.status(200).json(ApiResponse.returnSucess());
+            }
+        })
+    }
+
+    static update = (req, res) => {
+        let id = req.body.id;
+        let data = req.body.data;
+        users.findByIdAndUpdate(id, {$set: data}, (err) => {
+            if (err) {
+                res.status(500).json(ApiResponse.dbError(err));
+            } else {
+                res.status(200).json(ApiResponse.returnSucess());
+            }
+        })
+    }
+
     static findAll = (req, res)  => {
-        console.log(req.query);
-        if (req.query.storeCode) {
-            users.find(req.query, (err, users) => {
-                if (err) {
-                    res.status(500).json(ApiResponse.dbError(err))
-                } else {
-                    res.status(200).json(ApiResponse.returnSucess(users))
-                }
-            })
-        } else {
-            res.status(400).json(ApiResponse.returnError('Parametro obrigátorio não foi informado'))
-        }
+        users.find(req.query, (err, users) => {
+            if (err) {
+                res.status(500).json(ApiResponse.dbError(err))
+            } else {
+                res.status(200).json(ApiResponse.returnSucess(users))
+            }
+        })
     }
     
     static authenticate = (req, res) => {
