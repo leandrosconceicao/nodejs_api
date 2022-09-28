@@ -4,12 +4,13 @@ import crypto from 'crypto';
 
 class UserController {
     static add = (req, res) => {
+        const hashPass = crypto.create
         let user = new users(req.body);
         user.save((err, users) => {
             if (err) {
                 res.status(500).json(ApiResponse.dbError(err))
             } else {
-                res.status(200).json(ApiResponse.returnSucess(users));
+                res.status(201).json(ApiResponse.returnSucess(users));
             }
         })
     }
