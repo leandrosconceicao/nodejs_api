@@ -5,7 +5,11 @@ class ProductController {
     static findAll = (req, res) => {
         let prod = new products(req.query);
         products.find((err, prod) => {
-            res.status(200).json(ApiResponse.returnSucess(products));
+            if (err) {
+                res.status(500).json(ApiResponse.dbError(err));
+            } else {
+                res.status(200).json(ApiResponse.returnSucess(products));
+            }
         })
     }
 
