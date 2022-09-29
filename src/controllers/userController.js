@@ -1,6 +1,7 @@
 import users from "../models/Users.js";
 import ApiResponse from "../models/api_response.js";
 import crypto from 'crypto';
+import TokenGenerator from "../utils/tokenGenerator.js";
 
 class UserController {
     static add = (req, res) => {
@@ -56,7 +57,9 @@ class UserController {
                     res.status(500).json(ApiResponse.returnError(`Ocorreu um problema ${err}`));
                 } else {
                     if (users) {
-                        res.status(200).json(ApiResponse.returnSucess(users));
+                        const token = TokenGenerator.generate(req.body.email);
+                        res.set('Authorization', token);
+                        res.status(204).send();
                     } else {
                         res.status(400).json(ApiResponse.returnError('Dados incorretos ou inválidos.'))
                     }
