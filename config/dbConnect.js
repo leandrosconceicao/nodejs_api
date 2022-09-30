@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
-import url from './db.js';
+import * as dotenv from 'dotenv';
+dotenv.config();
+const url = process.env.DB_URL;
 
 mongoose.connect(url)
 
