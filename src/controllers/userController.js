@@ -19,7 +19,7 @@ class UserController {
       });
     } catch (e) {
       if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(403).json(ApiResponse.unauthorized());
+        res.status(401).json(ApiResponse.unauthorized());
       } else {
         console.log(e);
         res.status(400).json(ApiResponse.returnError());
@@ -40,7 +40,7 @@ class UserController {
       });
     } catch (e) {
       if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(403).json(ApiResponse.unauthorized());
+        res.status(401).json(ApiResponse.unauthorized());
       }
     }
   };

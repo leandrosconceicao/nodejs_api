@@ -38,7 +38,7 @@ class CategoryController {
       });
     } catch (e) {
       if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(403).json(ApiResponse.unauthorized());
+        res.status(401).json(ApiResponse.unauthorized());
       } else {
         res.status(400).json(ApiResponse.returnError());
       }
@@ -59,7 +59,7 @@ class CategoryController {
       });
     } catch (e) {
       if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(403).json(ApiResponse.unauthorized());
+        res.status(401).json(ApiResponse.unauthorized());
       } else {
         res.status(400).json(ApiResponse.returnError());
       }
@@ -79,7 +79,7 @@ class CategoryController {
       });
     } catch (e) {
       if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(403).json(ApiResponse.unauthorized());
+        res.status(401).json(ApiResponse.unauthorized());
       } else {
         res.status(400).json(ApiResponse.returnError());
       }
