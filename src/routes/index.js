@@ -1,8 +1,10 @@
 import express from "express";
 import endpoints from "../models/endpoints.js";
 import products from './productsRoutes.js';
-import response from '../models/api_response.js';
+import categories from './categoriesRoutes.js';
+import response from '../models/ApiResponse.js';
 import users from './usersRoutes.js';
+import clients from './clientsRoutes.js';
 import establishments from './establishmentsRoutes.js';
 
 const router = (app) => {
@@ -22,11 +24,21 @@ const router = (app) => {
         res.status(200).json(response.returnSucess())
     });
 
+    app.route(`${endpoints.clients}`, (req, res) => {
+        res.status(200).json(response.returnSucess())
+    });
+
+    app.route(`${endpoints.categories}`, (req, res) => {
+        res.status(200)
+    })
+
     app.use(
         express.json(),
         products,
+        categories,
         users,
         establishments,
+        clients,
     )
 }
 

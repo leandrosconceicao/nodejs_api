@@ -10,7 +10,19 @@ const productSchema = new mongoose.Schema({
     descricao: {type: String},
     preparacao: Boolean,
     storeCode: {type: String, required: true},
-    addOnes: {type: Array},
+    addONes: {
+        type: [{
+            _id: String,
+            isRequired: Boolean,
+            maxQuantityAllowed: Number,
+            name: String,
+            price: Number,
+            selectedQuantity: Number,
+            storeCode: String,
+            totalValue: Number
+        }],
+        default: undefined
+    },
 });
 
 const products = mongoose.model('produtos', productSchema)

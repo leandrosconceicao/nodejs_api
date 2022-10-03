@@ -1,21 +1,21 @@
-import Products from "../models/Product.js";
+import Clients from "../models/Clients.js";
 import ApiResponse from "../models/ApiResponse.js";
 
-class ProductController {
+class ClientController {
     static findAll = (req, res) => {
-        let prod = new Products(req.query);
-        Products.find(prod,(err, prod) => {
+        let client = new Clients(req.query);
+        Clients.find(client,(err, client) => {
             if (err) {
                 res.status(500).json(ApiResponse.dbError(err));
             } else {
-                console.log(prod);
-                res.status(200).json(ApiResponse.returnSucess(prod));
+                console.log(client);
+                res.status(200).json(ApiResponse.returnSucess(client));
             }
         })
     }
 
-    static addProduct = (req, res) => {
-        let product = new Products(req.body);
+    static add = (req, res) => {
+        let product = new Clients(req.body);
         product.save((err) => {
             if (err) {
                 res.status(500).send(ApiResponse.returnError())
@@ -29,7 +29,7 @@ class ProductController {
     static update = (req, res) => {
         let id = req.body.id;
         let data = req.body.data;
-        Products.findByIdAndUpdate(id, {$set: data}, (err) => {
+        Clients.findByIdAndUpdate(id, {$set: data}, (err) => {
             if (err) {
                 res.status(500).send(ApiResponse.dbError(err));
             } else {
@@ -38,9 +38,9 @@ class ProductController {
         })
     }
 
-    static deleteProduct = (req, res) => {
+    static delete = (req, res) => {
         let id = req.body.id;
-        Products.findByIdAndDelete(id, (err) => {
+        Clients.findByIdAndDelete(id, (err) => {
             if (err) {
                 res.status(500).json(ApiResponse.dbError(err))
             } else {
@@ -50,4 +50,4 @@ class ProductController {
     }
 }
 
-export default ProductController;
+export default ClientController;

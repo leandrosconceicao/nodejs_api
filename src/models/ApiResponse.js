@@ -35,8 +35,8 @@ class ApiResponse {
     });
   }
 
-  static unauthorized(message) {
-    return new ApiResponse({ message: message });
+  static unauthorized() {
+    return new ApiResponse({ message: 'Token inválido ou não informado'});
   }
 }
 

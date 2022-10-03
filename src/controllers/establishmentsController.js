@@ -1,5 +1,5 @@
 import establishments from "../models/Establishments.js";
-import ApiResponse from "../models/api_response.js";
+import ApiResponse from "../models/ApiResponse.js";
 import TokenGenerator from "../utils/tokenGenerator.js";
 import jwt from "jsonwebtoken";
 
