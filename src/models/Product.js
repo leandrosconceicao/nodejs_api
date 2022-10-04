@@ -23,6 +23,10 @@ const productSchema = new mongoose.Schema({
         }],
         default: undefined
     },
+    image: {
+        name: {type: String, default: undefined},
+        link: {type: String, default: undefined},
+    }
 });
 
 const products = mongoose.model('produtos', productSchema)
