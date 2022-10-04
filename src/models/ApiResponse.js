@@ -38,6 +38,10 @@ class ApiResponse {
   static unauthorized() {
     return new ApiResponse({ message: 'Token inválido ou não informado'});
   }
+
+  static tokenExpired() {
+    return new ApiResponse({message: 'Token expirado'});
+  }
 }
 
 export default ApiResponse;
