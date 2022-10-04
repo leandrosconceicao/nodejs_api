@@ -9,5 +9,6 @@ router
     .post(endpoints.products, ProductController.addProduct)
     .put(endpoints.products, ProductController.update)
     .delete(endpoints.products, ProductController.deleteProduct)
+    .delete(endpoints.product_images, ProductController.deleteImage)
 
 export default router;
