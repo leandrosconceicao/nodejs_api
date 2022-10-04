@@ -2,16 +2,17 @@ import Category from "../models/Categories.js";
 import ApiResponse from "../models/ApiResponse.js";
 import TokenGenerator from "../utils/tokenGenerator.js";
 import Jwt from "jsonwebtoken";
+import Validators from "../utils/utils.js";
 
 class CategoryController {
   static findAll = (req, res) => {
     let search = req.query;
     let cat = {};
-    if (search.id.length > 0) {
+    if (Validators.checkField(search.id)) {
       cat._id = search.id;
-    } else if (search.storeCode.length > 0) {
+    } else if (Validators.checkField(search.storeCode)) {
       cat.storeCode = search.storeCode;
-    } else if (search.nome.length > 0) {
+    } else if (Validators.checkField(search.nome)) {
       cat.nome = search.nome;
     }
     Category.find(cat, (err, result) => {
@@ -69,7 +70,7 @@ class CategoryController {
   static delete = (req, res) => {
     try {
       TokenGenerator.verify(req.headers.authorization);
-      let id = req.body.id;
+      let id = req.query.id;
       Category.findByIdAndDelete(id, (err) => {
         if (err) {
           res.status(500).json(ApiResponse.dbError(err));
