@@ -18,7 +18,9 @@ class UserController {
         }
       });
     } catch (e) {
-      if (e instanceof Jwt.JsonWebTokenError) {
+      if (e.name === 'TokenExpiredError') {
+        res.status(401).json(ApiResponse.tokenExpired())
+      } else if (e instanceof Jwt.JsonWebTokenError) {
         res.status(401).json(ApiResponse.unauthorized());
       } else {
         console.log(e);
@@ -46,25 +48,49 @@ class UserController {
   };
 
   static update = (req, res) => {
-    let id = req.body.id;
-    let data = req.body.data;
-    users.findByIdAndUpdate(id, { $set: data }, (err) => {
-      if (err) {
-        res.status(500).json(ApiResponse.dbError(err));
+    try {
+      TokenGenerator.verify(req.headers.authorization);
+      let id = req.body.id;
+      let data = req.body.data;
+      users.findByIdAndUpdate(id, { $set: data }, (err) => {
+        if (err) {
+          res.status(500).json(ApiResponse.dbError(err));
+        } else {
+          res.status(200).json(ApiResponse.returnSucess());
+        }
+      });
+    } catch (e) {
+      if (e.name === 'TokenExpiredError') {
+        res.status(401).json(ApiResponse.tokenExpired())
+      } else if (e instanceof Jwt.JsonWebTokenError) {
+        res.status(401).json(ApiResponse.unauthorized());
       } else {
-        res.status(200).json(ApiResponse.returnSucess());
+        console.log(e);
+        res.status(400).json(ApiResponse.returnError());
       }
-    });
+    }
   };
 
   static findAll = (req, res) => {
-    users.find(req.query, (err, users) => {
-      if (err) {
-        res.status(500).json(ApiResponse.dbError(err));
+    try {
+      TokenGenerator.verify(req.headers.authorization);
+      users.find(req.query, (err, users) => {
+        if (err) {
+          res.status(500).json(ApiResponse.dbError(err));
+        } else {
+          res.status(200).json(ApiResponse.returnSucess(users));
+        }
+      });
+    } catch (e) {
+      if (e.name === 'TokenExpiredError') {
+        res.status(401).json(ApiResponse.tokenExpired())
+      } else if (e instanceof Jwt.JsonWebTokenError) {
+        res.status(401).json(ApiResponse.unauthorized());
       } else {
-        res.status(200).json(ApiResponse.returnSucess(users));
+        console.log(e);
+        res.status(400).json(ApiResponse.returnError());
       }
-    });
+    }
   };
 
   static authenticate = (req, res) => {
