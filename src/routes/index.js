@@ -6,6 +6,7 @@ import response from '../models/ApiResponse.js';
 import users from './usersRoutes.js';
 import clients from './clientsRoutes.js';
 import establishments from './establishmentsRoutes.js';
+import menuItems from './menuItemsRoutes.js';
 
 const router = (app) => {
     app.route(`${endpoints.home}`).get((req, res) => {
@@ -39,6 +40,7 @@ const router = (app) => {
         users,
         establishments,
         clients,
+        menuItems,
     )
 }
 
