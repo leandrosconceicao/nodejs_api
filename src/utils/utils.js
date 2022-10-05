@@ -1,7 +1,7 @@
 class Validators {
     static checkField(field) {
         if (field != undefined) {
-            return field.length > 0;
+            return field.trimRight().length > 0;
         } else {
             return false;
         }
