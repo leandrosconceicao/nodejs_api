@@ -29,22 +29,15 @@ class EstablishmentsController {
   static add = (req, res) => {
     let token = req.headers.authorization;
     try {
-      if (token == undefined || token != TokenGenerator.verify(token)) {
-        res
-          .status(403)
-          .json(ApiResponse.returnError("Token inválido ou não informado"));
-      } else if (req.body._id && req.body.stores) {
-        let est = new establishments(req.body);
-        est.save((err, ests) => {
-          if (err) {
-            res.status(500).json(ApiResponse.dbError(err));
-          } else {
-            res.status(201).json(ApiResponse.returnSucess(ests));
-          }
-        });
-      } else {
-        res.status(400).json(ApiResponse.parameterNotFound(`id ou stores`));
-      }
+      TokenGenerator.verify(token);
+      let est = new establishments(req.body);
+      est.save((err, ests) => {
+        if (err) {
+          res.status(500).json(ApiResponse.dbError(err));
+        } else {
+          res.status(201).json(ApiResponse.returnSucess(ests));
+        }
+      });
     } catch (e) {
       if (e instanceof jwt.JsonWebTokenError) {
         return res.status(401).json(ApiResponse.unauthorized());
