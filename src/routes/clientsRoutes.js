@@ -6,6 +6,7 @@ const router = express.Router();
 
 router
     .get(endpoints.clients, ClientController.findAll)
+    .get(`${endpoints.clients}/:id`, ClientController.findOne)
     .post(endpoints.clients, ClientController.add)
     .put(endpoints.clients, ClientController.update)
     .delete(endpoints.clients, ClientController.delete)
