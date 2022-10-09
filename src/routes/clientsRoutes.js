@@ -8,6 +8,7 @@ router
     .get(endpoints.clients, ClientController.findAll)
     .get(`${endpoints.clients}/:id`, ClientController.findOne)
     .post(endpoints.clients, ClientController.add)
+    .post(`${endpoints.clients}/authentication`, ClientController.authentication)
     .put(endpoints.clients, ClientController.update)
     .delete(endpoints.clients, ClientController.delete)
 
