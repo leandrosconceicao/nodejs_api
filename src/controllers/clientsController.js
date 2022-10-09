@@ -50,7 +50,6 @@ class ClientController {
 
     static async add(req, res) {
         try {
-            TokenGenerator.verify(req.headers.authorization);
             let client = new Clients(req.body);
             client.password = new PassGenerator(client.password).build();
             res.status(200).json(ApiResponse.returnSucess(await client.save()))
