@@ -7,11 +7,13 @@ const clientsSchema = new mongoose.Schema({
     password: { type: String},
     isValid: { type: Boolean, default: undefined},
     phoneNumber: { type: String },
-    clientAddress: {
+    address: {
         type: [{
                 id: String,
                 address: String,
+                city: String,
                 complement: String,
+                distric: String,
                 number: String,
                 state: String,
                 zipCode: String,
