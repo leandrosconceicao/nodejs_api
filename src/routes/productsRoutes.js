@@ -6,6 +6,7 @@ const router = express.Router();
 
 router
     .get(endpoints.products, ProductController.findAll)
+    .get(`${endpoints.products}/:id`, ProductController.findOne)
     .post(endpoints.products, ProductController.addProduct)
     .put(endpoints.products, ProductController.update)
     .delete(endpoints.products, ProductController.deleteProduct)
