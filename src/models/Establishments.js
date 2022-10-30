@@ -7,6 +7,7 @@ const establishmentsSchema = new mongoose.Schema({
         type: [{
             id: String,
             location: String,   
+            url: String,
         }],
         default: undefined
     },

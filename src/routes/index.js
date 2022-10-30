@@ -8,6 +8,7 @@ import clients from './clientsRoutes.js';
 import establishments from './establishmentsRoutes.js';
 import menuItems from './menuItemsRoutes.js';
 import addOnes from './addOnesRoutes.js';
+import orders from './ordersRoutes.js';
 
 const router = (app) => {
     app.route(`${endpoints.home}`).get((req, res) => {
@@ -43,6 +44,7 @@ const router = (app) => {
         clients,
         menuItems,
         addOnes,
+        orders,
     )
 }
 
