@@ -5,6 +5,7 @@ const menuItemsSchema = new mongoose.Schema({
     ordenacao: {type: Number},
     products: {
         type: [{
+            _id: Number,
             descricao: String,
             preco: Number,
             produto: String

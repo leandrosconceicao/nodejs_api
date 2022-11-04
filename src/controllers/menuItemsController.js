@@ -24,7 +24,7 @@ class menuItemsController {
                             _id: 0,
                             image: 0,
                             storeCode: 0,
-                            "products._id": 0,
+                            // "products._id": 0,
                             "products.preparacao": 0,
                             "products.categoria": 0,
                             "products.storeCode": 0,
