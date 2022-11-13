@@ -1,6 +1,6 @@
 class Validators {
     static checkField(field) {
-        if (field != undefined) {
+        if (field) {
             return true;
         } else {
             return false;
