@@ -31,7 +31,7 @@ class ApiResponse {
 
   static parameterNotFound(message) {
     return new ApiResponse({
-      message: `Parametro obrigatório não foi informado ${message}`,
+      message: `Parametro obrigatório é inválido ou não foi informado ${message}`,
     });
   }
 
@@ -41,6 +41,10 @@ class ApiResponse {
 
   static tokenExpired() {
     return new ApiResponse({message: 'Token expirado'});
+  }
+
+  static noDataFound() {
+    return new ApiResponse({message: 'Nenhum dado encontrado'})
   }
 }
 
