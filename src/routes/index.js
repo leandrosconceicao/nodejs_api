@@ -37,13 +37,13 @@ const router = (app) => {
 
     app.use(
         express.json(),
+        addOnes,
+        menuItems,
         products,
         categories,
         users,
         establishments,
         clients,
-        menuItems,
-        addOnes,
         orders,
     )
 }
