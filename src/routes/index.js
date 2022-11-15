@@ -35,6 +35,10 @@ const router = (app) => {
         res.status(200)
     })
 
+    app.route(`${endpoints.orders}`, (req, res) => {
+        res.status(200)
+    });
+
     app.use(
         express.json(),
         addOnes,

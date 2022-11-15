@@ -7,5 +7,7 @@ const router = express.Router();
 router
     .get(Endpoints.orders, OrdersController.findAll)
     .get(`${Endpoints.orders}/:id`, OrdersController.findOne)
+    .post(Endpoints.orders, OrdersController.post)
+    .put(`${Endpoints.orders}/items`, OrdersController.put)
 
 export default router;
