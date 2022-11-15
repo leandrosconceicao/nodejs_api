@@ -48,6 +48,42 @@ class OrdersController {
         })
     }
 
+    static post = (req, res) => {
+        let body = req.body;
+        console.log(body);
+        if (Validators.checkField(body.storeCode)) {
+            let order = new Orders(body);
+            order.save((err) => {
+                if (err) {
+                    res.status(500).json(ApiResponse.dbError(err));
+                } else {
+                    res.status(201).json(ApiResponse.returnSucess());
+                }
+            });
+        } else {
+            res.status(406).json(ApiResponse.parameterNotFound('(storeCode)'))
+        }
+    }
+
+    static put = (req, res) => {
+        let body = req.body;
+        if (!Validators.checkField(body.id)) {
+            res.status(406).json(ApiResponse.parameterNotFound('(id)'));
+        }
+        if (!Validators.checkField(body.orders)) {
+            res.status(406).json(ApiResponse.parameterNotFound('(orders)'));
+        }
+        Orders.findByIdAndUpdate(body.id, {
+            $push: {"pedidos": body.orders}
+        }, (err) => {
+            if (err) {
+                res.status(500).json(ApiResponse.dbError(err));
+            } else {
+                res.status(200).json(ApiResponse.returnSucess());
+            }
+        })
+    }
+
 
 }
 
