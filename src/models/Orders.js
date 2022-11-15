@@ -21,14 +21,9 @@ const ordersSchema = new mongoose.Schema({
         addOnes: {
           type: [
             {
-              _id: String,
-              storeCode: String,
-              maxQuantityAllowed: Number,
+              quantity: Number,
               name: String,
               price: Number,
-              isRequired: Boolean,
-              selectedQuantity: Number,
-              totalValue: Number,
             },
           ],
           default: undefined
