@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 class EstablishmentsController {
   static findAll = (req, res) => {
     let query = new establishments(req.query);
-    establishments.find(query, (err, est) => {
+    establishments.find(query, {"ownerId": 0}, (err, est) => {
       if (err) {
         res.status(500).json(ApiResponse.dbError(err));
       } else {
@@ -17,7 +17,7 @@ class EstablishmentsController {
 
   static findOne = (req, res) => {
     const param = req.params;
-    establishments.findById({ _id: param.id }, (err, establishments) => {
+    establishments.findById({ _id: param.id }, {"ownerId": 0}, (err, establishments) => {
       if (err) {
         res.status(500).json(ApiResponse.dbError(err));
       } else {
