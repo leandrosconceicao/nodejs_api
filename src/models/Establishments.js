@@ -12,6 +12,7 @@ const establishmentsSchema = new mongoose.Schema({
         default: undefined
     },
     ownerId: {type: String},
+    logo: {type: String}
 }, {
     versionKey: false,
 })
