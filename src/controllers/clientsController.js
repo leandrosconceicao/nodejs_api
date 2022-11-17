@@ -22,7 +22,9 @@ class ClientController {
       } else {
         res.status(400).json(ApiResponse.returnError('Usuário inválido ou não encontrado, verifique os dados e tente novamente.'))
       }
-    } catch (e) {}
+    } catch (e) {
+      res.status(500).json(ApiResponse.returnError(e))
+    }
   }
 
   static async findOne(req, res) {

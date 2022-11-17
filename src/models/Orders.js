@@ -26,33 +26,63 @@ const ordersSchema = new mongoose.Schema({
               price: Number,
             },
           ],
-          default: undefined
+          default: undefined,
         },
       },
     ],
   },
   pago: { type: Boolean },
+  client: {
+    _id: { type: String },
+    name: { type: String },
+    email: { type: String, required: true, unique: true },
+    password: { type: String },
+    isValid: { type: Boolean, default: undefined },
+    phoneNumber: { type: String },
+    address: {
+      type: [
+        {
+          id: String,
+          address: String,
+          city: String,
+          complement: String,
+          distric: String,
+          number: String,
+          state: String,
+          zipCode: String,
+        },
+      ],
+      _id: false,
+      default: undefined,
+      versionKey: false,
+    },
+  },
   clientName: { type: String },
   obs: { type: String },
   accountStatus: { type: String },
   operador: { type: String },
   storeCode: { type: String },
   payment: {
-    type: [{
+    type: [
+      {
         id: String,
         tipo: String,
         operador: String,
         data: String,
         values: {
-            type: [{
-                form: String,
-                value: Number,
-            }]
-        }
-    }]
+          type: [
+            {
+              form: String,
+              value: Number,
+            },
+          ],
+        },
+      },
+    ],
   },
+  versionKey: false,
 });
 
-const orders = mongoose.model('pedidos', ordersSchema);
- 
+const orders = mongoose.model("pedidos", ordersSchema);
+
 export default orders;
