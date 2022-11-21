@@ -6,6 +6,8 @@ const ordersSchema = new mongoose.Schema({
   idMesa: { type: String },
   diaOperacao: { type: String },
   data: { type: String },
+  orderType: {type: String},
+  accepted: {type: Boolean},
   pedidos: {
     type: [
       {
@@ -21,6 +23,7 @@ const ordersSchema = new mongoose.Schema({
         addOnes: {
           type: [
             {
+              addOneName: String,
               quantity: Number,
               name: String,
               price: Number,
@@ -35,9 +38,7 @@ const ordersSchema = new mongoose.Schema({
   client: {
     _id: { type: String },
     name: { type: String },
-    email: { type: String, required: true, unique: true },
-    password: { type: String },
-    isValid: { type: Boolean, default: undefined },
+    email: { type: String, required: true},
     phoneNumber: { type: String },
     address: {
       type: [
