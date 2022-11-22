@@ -51,7 +51,6 @@ class OrdersController {
     if (Validators.checkField(query.diaOperacao)) {
       or.diaOperacao = query.operationDay;
     }
-    console.log(or);
     Orders.find(or, (err, order) => {
       if (err) {
         res.status(500).json(ApiResponse.dbError(err));
@@ -63,7 +62,6 @@ class OrdersController {
 
   static post = (req, res) => {
     let body = req.body;
-    console.log(body);
     if (Validators.checkField(body.storeCode)) {
       let order = new Orders(body);
       order.save((err) => {
