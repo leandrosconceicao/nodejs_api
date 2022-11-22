@@ -32,90 +32,60 @@ class EstablishmentsController {
   };
 
   static add = (req, res) => {
-    let token = req.headers.authorization;
-    try {
-      TokenGenerator.verify(token);
-      let est = new establishments(req.body);
-      est.save((err, ests) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(201).json(ApiResponse.returnSucess(ests));
-        }
-      });
-    } catch (e) {
-      if (e instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json(ApiResponse.unauthorized());
+    let est = new establishments(req.body);
+    est.save((err, ests) => {
+      if (err) {
+        res.status(500).json(ApiResponse.dbError(err));
       } else {
-        return res.status(400).json(ApiResponse.unauthorized());
+        res.status(201).json(ApiResponse.returnSucess(ests));
       }
-    }
+    });
   };
 
   static del = (req, res) => {
-    let token = req.headers.authorization;
-    try {
-      TokenGenerator.verify(token);
-      if (Validators.checkField(req.body.id)) {
-        establishments.findByIdAndDelete(req.body.id, (err) => {
-          if (err) {
-            res.status(500).json(ApiResponse.dbError(err));
-          } else {
-            res.status(200).json(ApiResponse.returnSucess());
-          }
-        })
-      } else {
-        res.status(406).json(ApiResponse.parameterNotFound('id'))
-      }
-    } catch (e) {
-      if (e instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        return res.status(400).json(ApiResponse.unauthorized());
-      }
+    if (!Validators.checkField(req.body.id)) {
+      res.status(406).json(ApiResponse.parameterNotFound('id'))
+    } else {
+      establishments.findByIdAndDelete(req.body.id, (err) => {
+        if (err) {
+          res.status(500).json(ApiResponse.dbError(err));
+        } else {
+          res.status(200).json(ApiResponse.returnSucess());
+        }
+      })
     }
   };
 
   static patch = (req, res) => {
-    let token = req.headers.authorization;
-    try {
-      TokenGenerator.verify(token);
-      if (!Validators.checkField(req.body.id)) {
-        res.status(406).json(ApiResponse.parameterNotFound('id'));
-      } else if (!Validators.checkField(req.body.data)) {
-        res.status(406).json(ApiResponse.parameterNotFound('data'))
-      } else if (!Validators.checkField(req.body.movement)) {
+    if (!Validators.checkField(req.body.id)) {
+      res.status(406).json(ApiResponse.parameterNotFound('id'));
+    } else if (!Validators.checkField(req.body.data)) {
+      res.status(406).json(ApiResponse.parameterNotFound('data'))
+    } else if (!Validators.checkField(req.body.movement)) {
+      res.status(406).json(ApiResponse.parameterNotFound('movement'));
+    } else {
+      if (req.body.movement == 'push') {
+        establishments.findByIdAndUpdate(req.body.id, {
+          $push: {"stores": req.body.data},
+        }, (err) => {
+          if (err) {
+            res.status(500).json(ApiResponse.dbError(err));
+          } else {
+            res.status(201).json(ApiResponse.returnSucess())
+          }
+        })
+      } else if (req.body.movement == 'pull') {
+        establishments.findByIdAndUpdate(req.body.id, {
+          $pull: {"stores": req.body.data},
+        }, (err) => {
+          if (err) {
+            res.status(500).json(ApiResponse.dbError(err));
+          } else {
+            res.status(201).json(ApiResponse.returnSucess())
+          }
+        })
+      } else {
         res.status(406).json(ApiResponse.parameterNotFound('movement'));
-      } else {
-        if (req.body.movement == 'push') {
-          establishments.findByIdAndUpdate(req.body.id, {
-            $push: {"stores": req.body.data},
-          }, (err) => {
-            if (err) {
-              res.status(500).json(ApiResponse.dbError(err));
-            } else {
-              res.status(201).json(ApiResponse.returnSucess())
-            }
-          })
-        } else if (req.body.movement == 'pull') {
-          establishments.findByIdAndUpdate(req.body.id, {
-            $pull: {"stores": req.body.data},
-          }, (err) => {
-            if (err) {
-              res.status(500).json(ApiResponse.dbError(err));
-            } else {
-              res.status(201).json(ApiResponse.returnSucess())
-            }
-          })
-        } else {
-          res.status(406).json(ApiResponse.parameterNotFound('movement'));
-        }
-      }
-    } catch (e) {
-      if (e instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        return res.status(400).json(ApiResponse.unauthorized());
       }
     }
   }

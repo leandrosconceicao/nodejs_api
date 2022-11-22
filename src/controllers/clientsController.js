@@ -15,9 +15,9 @@ class ClientController {
       });
       if (client) {
         if (client.isValid) {
-            res.status(200).json(ApiResponse.returnSucess(client)); 
+          res.status(200).json(ApiResponse.returnSucess(client));
         } else {
-            res.status(401).json(ApiResponse.returnError('Cadastro não foi validado, verifique sua caixa de email e confirme clicando no link enviado'))
+          res.status(401).json(ApiResponse.returnError('Cadastro não foi validado, verifique sua caixa de email e confirme clicando no link enviado'))
         }
       } else {
         res.status(400).json(ApiResponse.returnError('Usuário inválido ou não encontrado, verifique os dados e tente novamente.'))
@@ -28,26 +28,22 @@ class ClientController {
   }
 
   static async findOne(req, res) {
-    try {
-      TokenGenerator.verify(req.headers.authorization);
-      res
-        .status(200)
-        .json(ApiResponse.returnSucess(await Clients.findById(req.params.id)));
-    } catch (e) {
-      if (e.name === "TokenExpiredError") {
-        res.status(401).json(ApiResponse.tokenExpired());
-      } else if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        res.status(500).json(ApiResponse.dbError(e));
-      }
+    let id = req.params.id;
+    if (!Validators.checkField(id)) {
+      res.status(406).json(ApiResponse.parameterNotFound('id'))
+    } else {
+      Clients.findById(req.params.id, (err, client) => {
+        if (err) {
+          res.status(500).json(ApiResponse.dbError(err));
+        } else {
+          res.status(500).json(ApiResponse.returnSucess(client));
+        }
+      })
     }
   }
 
   static async findAll(req, res) {
-    try {
-      TokenGenerator.verify(req.headers.authorization);
-      let query = req.query;
+    let query = req.query;
       if (!Validators.checkField(query.name)) {
         delete query.name;
       } else if (!Validators.checkField(query.cgc)) {
@@ -58,38 +54,29 @@ class ClientController {
         delete query.isActive;
       }
       let client = new Clients(query);
-      res
-        .status(200)
-        .json(ApiResponse.returnSucess(await Clients.find(client)));
-    } catch (e) {
-      if (e.name === "TokenExpiredError") {
-        res.status(401).json(ApiResponse.tokenExpired());
-      } else if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        res.status(500).json(ApiResponse.dbError(e));
-      }
-    }
+      Clients.find(client, (err, cli) => {
+        if (err) {
+          res.status(500).json(ApiResponse.dbError(err));
+        } else {
+          res.status(200).json(ApiResponse.returnSucess(cli));
+        }
+      })
   }
 
   static async add(req, res) {
-    try {
-      let client = new Clients(req.body);
-      client.password = new PassGenerator(client.password).build();
-      res.status(200).json(ApiResponse.returnSucess(await client.save()));
-    } catch (e) {
-      if (e.code === 11000) {
-        res
-          .status(400)
-          .json(ApiResponse.returnError(`Atenção Usuário já cadastrado.`));
-      } else if (e.name === "TokenExpiredError") {
-        res.status(401).json(ApiResponse.tokenExpired());
-      } else if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
+    let client = new Clients(req.body);
+    client.password = new PassGenerator(client.password).build();
+    client.save((err) => {
+      if (err) {
+        if (err.code === 11000) {
+          res.status(400).json(ApiResponse.returnError(`Atenção Usuário já cadastrado.`));
+        } else {
+          res.status(500).json(ApiResponse.dbError(err));
+        }
       } else {
-        res.status(500).json(ApiResponse.dbError(e));
+        res.status(200).json(ApiResponse.returnSucess());
       }
-    }
+    })
   }
 
   static async update(req, res) {
@@ -109,13 +96,7 @@ class ClientController {
           );
       }
     } catch (e) {
-      if (e.name === "TokenExpiredError") {
-        res.status(401).json(ApiResponse.tokenExpired());
-      } else if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        res.status(500).json(ApiResponse.dbError(e));
-      }
+      res.status(500).json(ApiResponse.dbError(e));
     }
   }
 
@@ -135,13 +116,7 @@ class ClientController {
           );
       }
     } catch (e) {
-      if (e.name === "TokenExpiredError") {
-        res.status(401).json(ApiResponse.tokenExpired());
-      } else if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        res.status(500).json(ApiResponse.dbError(e));
-      }
+      res.status(500).json(ApiResponse.dbError(e));
     }
   }
 }

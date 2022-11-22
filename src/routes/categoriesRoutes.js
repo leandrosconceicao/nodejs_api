@@ -1,13 +1,14 @@
 import express from 'express';
 import CategoryController from '../controllers/categoriesController.js';
 import endpoints from '../models/endpoints.js';
+import validateToken from '../middlewares/tokenController.js';
 
 const router = express.Router();
 
 router
-    .get(endpoints.categories, CategoryController.findAll)
-    .post(endpoints.categories, CategoryController.add)
-    .put(endpoints.categories, CategoryController.update)
-    .delete(endpoints.categories, CategoryController.delete)
+    .get(endpoints.categories, validateToken, CategoryController.findAll)
+    .post(endpoints.categories, validateToken, CategoryController.add)
+    .put(endpoints.categories, validateToken, CategoryController.update)
+    .delete(endpoints.categories, validateToken, CategoryController.delete)
 
 export default router;

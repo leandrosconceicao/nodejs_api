@@ -1,8 +1,6 @@
 import Products from "../models/Product.js";
 import ApiResponse from "../models/ApiResponse.js";
 import Validators from "../utils/utils.js";
-import TokenGenerator from "../utils/tokenGenerator.js";
-import Jwt from "jsonwebtoken";
 
 class ProductController {
 
@@ -63,28 +61,16 @@ class ProductController {
 
   static deleteProduct = (req, res) => {
     let query = req.body;
-    console.log(req.headers.authorization);
     if (!query.id) {
       res.status(400).json(ApiResponse.parameterNotFound())
     } else {
-      try {
-        TokenGenerator.verify(req.headers.authorization);
-        Products.findByIdAndDelete(query.id, (err) => {
-          if (err) {
-            res.status(500).json(ApiResponse.dbError(err));
-          } else {
-            res.status(200).json(ApiResponse.returnSucess());
-          }
-        });
-      } catch (e) {
-        if (e.name === 'TokenExpiredError') {
-          res.status(401).json(ApiResponse.tokenExpired())
-        } else if (e instanceof Jwt.JsonWebTokenError) {
-          res.status(401).json(ApiResponse.unauthorized());
+      Products.findByIdAndDelete(query.id, (err) => {
+        if (err) {
+          res.status(500).json(ApiResponse.dbError(err));
         } else {
-          res.status(500).json(ApiResponse.returnError());
+          res.status(200).json(ApiResponse.returnSucess());
         }
-      }
+      });
     }
   };
 

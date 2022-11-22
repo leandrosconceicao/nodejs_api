@@ -6,91 +6,46 @@ import Jwt from "jsonwebtoken";
 
 class UserController {
   static add = (req, res) => {
-    try {
-      TokenGenerator.verify(req.headers.authorization);
-      let user = new users(req.body);
-      user.pass = new PassGenerator(user.pass).build();
-      user.save((err, users) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(201).json(ApiResponse.returnSucess(users));
-        }
-      });
-    } catch (e) {
-      if (e.name === 'TokenExpiredError') {
-        res.status(401).json(ApiResponse.tokenExpired())
-      } else if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
+    let user = new users(req.body);
+    user.pass = new PassGenerator(user.pass).build();
+    user.save((err, users) => {
+      if (err) {
+        res.status(500).json(ApiResponse.dbError(err));
       } else {
-        console.log(e);
-        res.status(400).json(ApiResponse.returnError());
+        res.status(201).json(ApiResponse.returnSucess(users));
       }
-    }
+    });
   };
 
   static delete = (req, res) => {
-    try {
-      TokenGenerator.verify(req.headers.authorization);
-      let id = req.body.id;
-      users.findByIdAndDelete(id, (err) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(200).json(ApiResponse.returnSucess());
-        }
-      });
-    } catch (e) {
-      if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
+    let id = req.body.id;
+    users.findByIdAndDelete(id, (err) => {
+      if (err) {
+        res.status(500).json(ApiResponse.dbError(err));
+      } else {
+        res.status(200).json(ApiResponse.returnSucess());
       }
-    }
+    });
   };
 
   static update = (req, res) => {
-    try {
-      TokenGenerator.verify(req.headers.authorization);
-      let id = req.body.id;
-      let data = req.body.data;
-      users.findByIdAndUpdate(id, { $set: data }, (err) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(200).json(ApiResponse.returnSucess());
-        }
-      });
-    } catch (e) {
-      if (e.name === 'TokenExpiredError') {
-        res.status(401).json(ApiResponse.tokenExpired())
-      } else if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
+    users.findByIdAndUpdate(id, { $set: data }, (err) => {
+      if (err) {
+        res.status(500).json(ApiResponse.dbError(err));
       } else {
-        console.log(e);
-        res.status(400).json(ApiResponse.returnError());
+        res.status(200).json(ApiResponse.returnSucess());
       }
-    }
+    });
   };
 
   static findAll = (req, res) => {
-    try {
-      TokenGenerator.verify(req.headers.authorization);
-      users.find(req.query, (err, users) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(200).json(ApiResponse.returnSucess(users));
-        }
-      });
-    } catch (e) {
-      if (e.name === 'TokenExpiredError') {
-        res.status(401).json(ApiResponse.tokenExpired())
-      } else if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
+    users.find(req.query, (err, users) => {
+      if (err) {
+        res.status(500).json(ApiResponse.dbError(err));
       } else {
-        console.log(e);
-        res.status(400).json(ApiResponse.returnError());
+        res.status(200).json(ApiResponse.returnSucess(users));
       }
-    }
+    });
   };
 
   static authenticate = (req, res) => {
