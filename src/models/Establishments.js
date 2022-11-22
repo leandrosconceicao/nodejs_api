@@ -8,6 +8,7 @@ const establishmentsSchema = new mongoose.Schema({
             id: String,
             location: String,   
             url: String,
+            isOpen: Boolean,
         }],
         default: undefined
     },
