@@ -1,6 +1,6 @@
-import Products from "../models/Product.js";
-import ApiResponse from "../models/ApiResponse.js";
-import Validators from "../utils/utils.js";
+import Products from '../../models/Product.js';
+import ApiResponse from "../../models/ApiResponse.js";
+import Validators from "../../utils/utils.js";
 
 class ProductController {
 

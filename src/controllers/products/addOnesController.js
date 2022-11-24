@@ -1,8 +1,8 @@
-import AddOnes from "../models/AddOnes.js";
-import ApiResponse from "../models/ApiResponse.js";
-import TokenGenerator from "../utils/tokenGenerator.js";
+import AddOnes from "../../models/AddOnes.js";
+import ApiResponse from "../../models/ApiResponse.js";
+import TokenGenerator from "../../utils/tokenGenerator.js";
 import Jwt from "jsonwebtoken";
-import Validators from "../utils/utils.js";
+import Validators from "../../utils/utils.js";
 
 class AddOneController {
   static findAll = (req, res) => {

@@ -1,9 +1,7 @@
-import Clients from "../models/Clients.js";
-import ApiResponse from "../models/ApiResponse.js";
-import TokenGenerator from "../utils/tokenGenerator.js";
-import PassGenerator from "../utils/passGenerator.js";
-import Jwt from "jsonwebtoken";
-import Validators from "../utils/utils.js";
+import Clients from "../../models/Clients.js";
+import ApiResponse from "../../models/ApiResponse.js";
+import PassGenerator from "../../utils/passGenerator.js";
+import Validators from "../../utils/utils.js";
 
 class ClientController {
   static async authentication(req, res) {

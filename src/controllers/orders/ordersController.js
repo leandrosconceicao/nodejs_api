@@ -1,6 +1,6 @@
-import Validators from "../utils/utils.js";
-import Orders from "../models/Orders.js";
-import ApiResponse from "../models/ApiResponse.js";
+import Validators from "../../utils/utils.js";
+import Orders from "../../models/Orders.js";
+import ApiResponse from "../../models/ApiResponse.js";
 
 class OrdersController {
   static findOne = (req, res) => {

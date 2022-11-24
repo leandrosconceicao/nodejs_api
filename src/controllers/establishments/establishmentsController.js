@@ -1,8 +1,6 @@
-import establishments from "../models/Establishments.js";
-import ApiResponse from "../models/ApiResponse.js";
-import TokenGenerator from "../utils/tokenGenerator.js";
-import jwt from "jsonwebtoken";
-import Validators from "../utils/utils.js";
+import establishments from "../../models/Establishments.js";
+import ApiResponse from "../../models/ApiResponse.js";
+import Validators from "../../utils/utils.js";
 
 class EstablishmentsController {
   static findAll = (req, res) => {

@@ -1,5 +1,5 @@
 import express from 'express';
-import CategoryController from '../controllers/categoriesController.js';
+import CategoryController from '../controllers/products/categoriesController.js';
 import endpoints from '../models/endpoints.js';
 import validateToken from '../middlewares/tokenController.js';
 

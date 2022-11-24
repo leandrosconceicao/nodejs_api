@@ -1,6 +1,6 @@
-import ApiResponse from "../models/ApiResponse.js";
-import MenuItems from "../models/MenuItems.js";
-import Validators from "../utils/utils.js";
+import ApiResponse from "../../models/ApiResponse.js";
+import MenuItems from "../../models/MenuItems.js";
+import Validators from "../../utils/utils.js";
 
 class menuItemsController {
     static async get(req, res) {

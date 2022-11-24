@@ -1,6 +1,6 @@
-import Category from "../models/Categories.js";
-import ApiResponse from "../models/ApiResponse.js";
-import Validators from "../utils/utils.js";
+import Category from "../../models/Categories.js";
+import ApiResponse from "../../models/ApiResponse.js";
+import Validators from "../../utils/utils.js";
 
 class CategoryController {
   static findAll = (req, res) => {

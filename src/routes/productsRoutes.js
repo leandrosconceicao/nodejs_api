@@ -1,5 +1,5 @@
 import express from 'express';
-import ProductController from '../controllers/productController.js';
+import ProductController from '../controllers/products/productController.js';
 import endpoints from '../models/endpoints.js';
 import validateToken from '../middlewares/tokenController.js';
 

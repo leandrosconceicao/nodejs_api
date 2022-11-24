@@ -1,8 +1,7 @@
-import users from "../models/Users.js";
-import ApiResponse from "../models/ApiResponse.js";
-import TokenGenerator from "../utils/tokenGenerator.js";
-import PassGenerator from "../utils/passGenerator.js";
-import Jwt from "jsonwebtoken";
+import users from "../../models/Users.js";
+import ApiResponse from "../../models/ApiResponse.js";
+import TokenGenerator from "../../utils/tokenGenerator.js";
+import PassGenerator from "../../utils/passGenerator.js";
 
 class UserController {
   static add = (req, res) => {
