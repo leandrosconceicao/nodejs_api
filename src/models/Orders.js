@@ -6,8 +6,8 @@ const ordersSchema = new mongoose.Schema({
   idMesa: { type: String },
   diaOperacao: { type: String },
   data: { type: String },
-  orderType: {type: String},
-  accepted: {type: Boolean},
+  orderType: { type: String },
+  accepted: { type: Boolean },
   pedidos: {
     type: [
       {
@@ -38,25 +38,19 @@ const ordersSchema = new mongoose.Schema({
   client: {
     _id: { type: String },
     name: { type: String },
-    email: { type: String, required: true},
+    email: { type: String, required: true },
     phoneNumber: { type: String },
-    address: {
-      type: [
-        {
-          id: String,
-          address: String,
-          city: String,
-          complement: String,
-          distric: String,
-          number: String,
-          state: String,
-          zipCode: String,
-        },
-      ],
-      _id: false,
-      default: undefined,
-      versionKey: false,
-    },
+  },
+  deliveryAddress: {
+    id: String,
+    address: String,
+    city: String,
+    complement: String,
+    distric: String,
+    number: String,
+    state: String,
+    zipCode: String,
+    versionKey: false,
   },
   clientName: { type: String },
   obs: { type: String },
