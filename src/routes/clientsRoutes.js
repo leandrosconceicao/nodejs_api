@@ -7,9 +7,9 @@ const router = express.Router();
 router
     .get(endpoints.clients, validateToken, ClientController.findAll)
     .get(`${endpoints.clients}/:id`, validateToken, ClientController.findOne)
-    .post(endpoints.clients, validateToken, ClientController.add)
-    .post(`${endpoints.clients}/authentication`, validateToken, ClientController.authentication)
-    .put(endpoints.clients, validateToken, ClientController.update)
+    .post(endpoints.clients, ClientController.add)
+    .post(`${endpoints.clients}/authentication`, ClientController.authentication)
+    .put(endpoints.clients, ClientController.update)
     .delete(endpoints.clients, validateToken, ClientController.delete)
 
 export default router;
