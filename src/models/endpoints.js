@@ -11,6 +11,7 @@ class Endpoints {
     static establishments = '/establishments';
     static users = '/users';
     static clients = '/clients';
+    static events = '/events';
 }
 
 export default Endpoints;
