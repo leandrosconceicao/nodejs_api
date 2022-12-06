@@ -8,6 +8,7 @@ const ordersSchema = new mongoose.Schema({
   data: { type: String },
   orderType: { type: String },
   accepted: { type: Boolean },
+  deliveryStatus: {type: String},
   pedidos: {
     type: [
       {
