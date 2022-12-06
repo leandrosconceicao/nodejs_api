@@ -30,6 +30,9 @@ class OrdersController {
         or.idMesa = { $ne: "" };
       }
     }
+    if (Validators.checkField(query.clientId)) {
+      or["client._id"] = query.clientId;
+    }
     if (Validators.checkField(query.idTable)) {
       or.idMesa = query.idTable;
     }
@@ -51,6 +54,7 @@ class OrdersController {
     if (Validators.checkField(query.diaOperacao)) {
       or.diaOperacao = query.operationDay;
     }
+    console.log(or);
     Orders.find(or, (err, order) => {
       if (err) {
         res.status(500).json(ApiResponse.dbError(err));
