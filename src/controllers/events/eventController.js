@@ -10,23 +10,21 @@ class EventsController {
     if (!Validators.checkField(storeCode)) {
       res.status(406).json(ApiResponse.parameterNotFound("storeCode"));
     } else {
-      console.log(`Client connected ${req.headers}`)
+      console.log(`Client connected`);
       res.set("Content-Type", "text/event-stream");
       res.set("Connection", "keep-alive");
       res.set("Cache-Control", "no-cache");
       res.set("Access-Control-Allow-Origin", "*");
       setInterval(async () => {
-        let query = await orders
-          .find({ storeCode: storeCode })
-          .sort({ data: -1 })
-          .limit(5);
+        let query = await orders.find({ storeCode: storeCode });
         if (query.length) {
           let newData = query.splice(-1)[0];
           if (cachedOrder == null) {
             cachedOrder = newData;
+            res.status(200).write(`${JSON.stringify(newData)}\n\n`);
           } else if (cachedOrder.id != newData.id) {
             cachedOrder = newData;
-            res.status(200).write(`data: ${JSON.stringify(newData)}\n\n`);
+            res.status(200).write(`${JSON.stringify(newData)}\n\n`);
           }
         }
       }, 3600);

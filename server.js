@@ -18,7 +18,7 @@ io.on('connection', socket => {
 })
 
 
-const port = process.env.PORT || 8081
+const port = process.env.PORT || 80
 
 
 httpServer.listen(port, () => console.log(`Servidor rodando em http://localhost:${port}`))
