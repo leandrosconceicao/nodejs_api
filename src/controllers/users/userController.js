@@ -59,6 +59,7 @@ class UserController {
           if (users) {
             const token = TokenGenerator.generate(req.body.email);
             res.set("Authorization", token);
+            res.set("Access-Control-Expose-Headers", "*");
             res.status(200).json(ApiResponse.returnSucess(users));
           } else {
             res
