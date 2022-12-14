@@ -9,6 +9,7 @@ import addOnes from './addOnesRoutes.js';
 import orders from './ordersRoutes.js';
 import ApiResponse from "../models/ApiResponse.js";
 import events from "./eventsRoutes.js";
+import validation from "./validationsRoutes.js";
 
 const router = (app) => {
 
@@ -27,6 +28,7 @@ const router = (app) => {
         clients,
         orders,
         events,
+        validation,
     )
 }
 
