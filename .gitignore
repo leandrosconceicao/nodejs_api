@@ -4,3 +4,4 @@ test.js
 config/server-config.js
 .env
 *.yaml
+.vscode
