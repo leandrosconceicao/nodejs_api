@@ -13,7 +13,12 @@ const establishmentsSchema = new mongoose.Schema({
         default: undefined
     },
     ownerId: {type: String},
-    logo: {type: String}
+    logo: {type: String},
+    visibles: {
+        showCardInfo: {type: Boolean},
+        showSocialNetWork: {type: Boolean},
+        showTipInfo: {type: Boolean},
+    }
 }, {
     versionKey: false,
 })
