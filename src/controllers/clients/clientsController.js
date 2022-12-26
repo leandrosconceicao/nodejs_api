@@ -2,7 +2,7 @@ import Clients from "../../models/Clients.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import PassGenerator from "../../utils/passGenerator.js";
 import Validators from "../../utils/utils.js";
-import Mail from "../emails/emailController.js";
+import Mail from "../email/clientActivationTemplate.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
 
 class ClientController {
@@ -92,7 +92,7 @@ class ClientController {
         }
       } else {
         try {
-          Mail.send({ id: client.id, name: client.name, to: client.email });
+          Mail.send({ id: client.id, name: client.name, to: client.email , subject: 'Confirmação de email'});
         } catch (e) {
         } finally {
           res.status(200).json(ApiResponse.returnSucess());

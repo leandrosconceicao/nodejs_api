@@ -1,4 +1,4 @@
-const emailTemplate = ({id, name}) =>  `
+const clientActivationTemplate = ({id, name}) =>  `
 <!DOCTYPE html>
 
 <html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
@@ -192,7 +192,7 @@ const emailTemplate = ({id, name}) =>  `
 																		style="outline:none" tabindex="-1"
 																		target="_blank"><img alt="Image of lock & key."
 																			class="big"
-																			src="https://firebasestorage.googleapis.com/v0/b/leandrotech.appspot.com/o/___passwordreset.gif?alt=media&token=9da95c71-85f8-4cc8-b6e8-a883e175febb"
+																			src="https://firebasestorage.googleapis.com/v0/b/leandrotech.appspot.com/o/assets%2F___passwordreset.gif?alt=media&token=e8707d1c-a9b9-48d9-b4d1-b3331ef3c7c1"
 																			style="display: block; height: auto; border: 0; width: 640px; max-width: 100%;"
 																			title="Image of lock & key."
 																			width="640" /></a></div>
@@ -386,7 +386,7 @@ const emailTemplate = ({id, name}) =>  `
 																								align="center"
 																								alt="Designed with BEE"
 																								class="icon" height="32"
-																								src="https://firebasestorage.googleapis.com/v0/b/leandrotech.appspot.com/o/bee.png?alt=media&token=81b4920e-610e-4685-8d58-17612ab054bb"
+																								src="https://firebasestorage.googleapis.com/v0/b/leandrotech.appspot.com/o/assets%2Fbee.png?alt=media&token=f219f5c4-d78a-4511-aca4-a67b78a4f542"
 																								style="display: block; height: auto; margin: 0 auto; border: 0;"
 																								width="34" /></a></td>
 																					<td
@@ -418,4 +418,4 @@ const emailTemplate = ({id, name}) =>  `
 </body>
 
 </html>`;
-export default emailTemplate
+export default clientActivationTemplate
