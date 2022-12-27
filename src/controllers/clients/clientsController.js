@@ -2,7 +2,8 @@ import Clients from "../../models/Clients.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import PassGenerator from "../../utils/passGenerator.js";
 import Validators from "../../utils/utils.js";
-import Mail from "../email/clientActivationTemplate.js";
+import Mail from "../email/clientActivation.js";
+import clientActivationTemplate from "../email/templates/emailTemplates.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
 
 class ClientController {
@@ -51,7 +52,10 @@ class ClientController {
         if (err) {
           res.status(500).json(ApiResponse.dbError(err));
         } else {
-          res.status(500).json(ApiResponse.returnSucess(client));
+          if (!err) {
+            res.status(200).json(ApiResponse());
+          }
+          res.status(200).json(ApiResponse.returnSucess(client));
         }
       });
     }
@@ -92,7 +96,14 @@ class ClientController {
         }
       } else {
         try {
-          Mail.send({ id: client.id, name: client.name, to: client.email , subject: 'Confirmação de email'});
+          Mail.send({
+            to: client.email,
+            subject: "Confirmação de email",
+            body: clientActivationTemplate({
+              id: client.id,
+              name: client.name,
+            }),
+          });
         } catch (e) {
         } finally {
           res.status(200).json(ApiResponse.returnSucess());
@@ -162,16 +173,47 @@ class ClientController {
     } else if (!Validators.checkField(pass)) {
       res.status(406).json(ApiResponse.parameterNotFound("(password)"));
     } else if (!Validators.checkField(newPass)) {
-      res.status(406).json(ApiResponse.parameterNotFound("(newPass)"))
+      res.status(406).json(ApiResponse.parameterNotFound("(newPass)"));
     } else {
       let hashPass = new PassGenerator(pass).build();
       let newHashPass = new PassGenerator(newPass).build();
-      Clients.findOneAndUpdate({_id: id, password: hashPass}, { $set: { password: newHashPass } }, (err, dt) => {
+      Clients.findOneAndUpdate(
+        { _id: id, password: hashPass },
+        { $set: { password: newHashPass } },
+        (err, dt) => {
+          if (err) {
+            res.status(500).json(ApiResponse.dbError(err));
+          } else {
+            if (!dt) {
+              res.status(400).json(ApiResponse.noDataFound());
+            } else {
+              res.status(200).json(ApiResponse.returnSucess());
+            }
+          }
+        }
+      );
+    }
+  };
+
+  static forgotPassword = (req, res) => {
+    let email = req.query.email;
+    if (!Validators.checkField(email)) {
+      res.status(406).json(ApiResponse.parameterNotFound("(email)"));
+    } else {
+      Clients.findOne({ email: email }, (err, cli) => {
         if (err) {
           res.status(500).json(ApiResponse.dbError(err));
         } else {
-          if (!dt) {
-            res.status(400).json(ApiResponse.noDataFound())
+          if (!cli) {
+            res
+              .status(400)
+              .json(
+                new ApiResponse({
+                  statusProcess: false,
+                  message:
+                    "Email não localizado, verifique se o email esta correto e tente novamente.",
+                })
+              );
           } else {
             res.status(200).json(ApiResponse.returnSucess());
           }
@@ -179,25 +221,6 @@ class ClientController {
       });
     }
   };
-
-  static forgotPassword = (req, res) => {
-    let email = req.query.email;
-    if (!Validators.checkField(email)) {
-      res.status(406).json(ApiResponse.parameterNotFound('(email)'));
-    } else {
-      Clients.findOne({email: email}, (err, cli) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          if (!cli) {
-            res.status(400).json(new ApiResponse({statusProcess: false, message: 'Email não localizado, verifique se o email esta correto e tente novamente.'}));
-          } else {
-            res.status(200).json(ApiResponse.returnSucess());
-          }
-        }
-      })
-    }
-  }
 }
 
 export default ClientController;

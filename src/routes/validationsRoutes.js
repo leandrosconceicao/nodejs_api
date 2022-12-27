@@ -6,8 +6,8 @@ import endpoints from '../models/endpoints.js';
 const router = express.Router();
 
 router
+    .get(`${endpoints.clientsValidation}/:id`, ClientController.validate)
     .get(endpoints.clients_forgot_password, ClientController.forgotPassword)
-    .post(`${endpoints.clientsValidation}/:id`, ClientController.validate)
     .patch(`${endpoints.clients_recover_password}`, ClientController.recoverPassword)
 
 export default router;

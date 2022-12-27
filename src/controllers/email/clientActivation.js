@@ -15,17 +15,17 @@ class Mail {
     });
   }
 
-  static mailer({ id, name, to, subject }) {
+  static mailer({to, subject, body}) {
     return {
       from: process.env.EMAIL_ACCOUNT,
       to: to,
       subject: subject,
-      html: clientActivationTemplate({id: id, name: name}),
+      html: body,
     };
   }
 
-  static send({ id, name, to, subject}) {
-    this.transporter().sendMail(this.mailer({ id: id , name: name, to: to, subject: subject}), (err, info) => {
+  static send({ to, subject, body}) {
+    this.transporter().sendMail(this.mailer({to: to, subject: subject, body}), (err, info) => {
       if (err) {
         console.log(err);
       } else {
