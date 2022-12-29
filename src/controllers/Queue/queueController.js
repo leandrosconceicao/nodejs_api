@@ -5,13 +5,18 @@ import Validators from "../../utils/utils.js";
 class QueueService {
 
     static findAll = (req, res) => {
-        Queue.find({}, (err, data) => {
-            if (err) {
-                res.status(500).json(ApiResponse.dbError(err));
-            } else {
-                res.status(200).json(ApiResponse.returnSucess(data))
-            }
-        })
+        let storeCode = req.query.storeCode;
+        if (!Validators.checkField(storeCode)) {
+            res.status(406).json(ApiResponse.parameterNotFound('(storeCode)'))
+        } else {
+            Queue.find({storeCode: storeCode}, (err, data) => {
+                if (err) {
+                    res.status(500).json(ApiResponse.dbError(err));
+                } else {
+                    res.status(200).json(ApiResponse.returnSucess(data))
+                }
+            })
+        }
     }
 
     static generate = async (req, res) => {
@@ -30,7 +35,7 @@ class QueueService {
                     if (err) {
                         res.status(500).json(ApiResponse.dbError(err));
                     } else {
-                        res.status(201).json(ApiResponse.returnSucess(q));
+                        res.status(201).json(ApiResponse.returnSucess([q]));
                     }
                 })
             } else {
