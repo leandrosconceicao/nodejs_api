@@ -15,6 +15,7 @@ class Endpoints {
     static clients_recover_password = '/clients/recover_password';
     static clients_forgot_password = '/clients_forgot_password';
     static events = '/events';
+    static queue = '/queue';
 }
 
 export default Endpoints;
