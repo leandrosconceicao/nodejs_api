@@ -30,7 +30,7 @@ const router = (app) => {
         orders,
         events,
         validation,
-        queue
+        queue,
     )
 }
 
