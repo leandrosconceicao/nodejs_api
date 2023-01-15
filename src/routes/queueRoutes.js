@@ -1,5 +1,5 @@
 import express from "express";
-import QueueService from "../controllers/Queue/queueController.js";
+import QueueService from '../controllers/queue/queueController.js';
 import Endpoints from "../models/endpoints.js";
 
 
