@@ -1,10 +1,9 @@
 import nodemailer from "nodemailer";
-import clientActivationTemplate from "./templates/emailTemplates.js";
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 class Mail {
-  static transporter() {
+  transporter() {
     return nodemailer.createTransport({
       host: process.env.SERVICE,
       port: 2525,
@@ -24,14 +23,8 @@ class Mail {
     };
   }
 
-  static send({ to, subject, body}) {
-    this.transporter().sendMail(this.mailer({to: to, subject: subject, body}), (err, info) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(info);
-      }
-    });
+  static async send({ to, subject, body}) {
+    await this.transporter().sendMail(this.mailer({to: to, subject: subject, body}),);
   }
 }
 
