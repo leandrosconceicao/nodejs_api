@@ -3,8 +3,9 @@ import ApiResponse from "../../models/ApiResponse.js";
 import PassGenerator from "../../utils/passGenerator.js";
 import Validators from "../../utils/utils.js";
 import Mail from "../email/clientActivation.js";
-import clientActivationTemplate from "../email/templates/emailTemplates.js";
+import clientActivationTemplate from "../email/templates/activateTemplate.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
+import passwordRecoverTemplate from "../email/templates/passwordRecoverTemplate.js";
 
 class ClientController {
   static async authentication(req, res) {
@@ -164,7 +165,7 @@ class ClientController {
     });
   };
 
-  static recoverPassword = (req, res) => {
+  static updatePassword = (req, res) => {
     let id = req.body.id;
     let pass = req.body.password;
     let newPass = req.body.newPassword;
@@ -195,30 +196,81 @@ class ClientController {
     }
   };
 
-  static forgotPassword = (req, res) => {
-    let email = req.query.email;
-    if (!Validators.checkField(email)) {
-      res.status(406).json(ApiResponse.parameterNotFound("(email)"));
-    } else {
-      Clients.findOne({ email: email }, (err, cli) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
+  static async recoverPassword(req, res) {
+    try {
+      const token = req.body.token;
+      const pass = req.body.password;
+      if (!Validators.checkField(token)) {
+        return res.status(406).json(ApiResponse.parameterNotFound('(token)'))
+      } else if (!Validators.checkField(pass)) {
+        return res.status(406).json(ApiResponse.parameterNotFound('(password)'))
+      } else {
+        const hashPass = new PassGenerator(pass).build();
+        const client = await Clients.findOne({passwordResetToken: token});
+        if (!client) {
+          return res.status(400).json(ApiResponse.returnError({message: 'Cliente não localizado, ou token inválido, solicite a recuperação de senha novamente.'}));
         } else {
-          if (!cli) {
-            res
-              .status(400)
-              .json(
-                new ApiResponse({
-                  statusProcess: false,
-                  message:
-                    "Email não localizado, verifique se o email esta correto e tente novamente.",
-                })
-              );
+          const now = new Date();
+          if (now > client.passwordResetExpires) {
+            return res.status(400).json(ApiResponse.returnError({message: 'Token expirado, solicite a recuperação de senha novamente.'}))
           } else {
-            res.status(200).json(ApiResponse.returnSucess());
+            Clients.findOneAndUpdate({passwordResetToken: token}, {"$set": {
+              password: hashPass
+            }, "$unset": {passwordResetExpires: "", passwordResetToken: ""}}, (err) => {
+              if (err) {
+                return res.status(500).json(ApiResponse.dbError(err));
+              } else {
+                return res.status(200).json(ApiResponse.returnSucess());
+              }
+            });
           }
         }
-      });
+      }
+    } catch (e) {
+      return res.status(500).json(ApiResponse.dbError(e))
+    }
+  }
+
+  static async forgotPassword(req, res) {
+    try {
+      const {email} = req.body;
+      if (!Validators.checkField(email)) {
+        return res.status(406).json(ApiResponse.parameterNotFound("(email)"));
+      } else {
+        const cli = await Clients.findOne({ email: email });
+        if (!cli) {
+          return res.status(400).json(ApiResponse.returnError({message: "Email não localizado, verifique se o email esta correto e tente novamente."}));
+        } else {
+          
+          const token = TokenGenerator.getToken();
+
+          const now = new Date();
+
+          now.setHours(now.getHours() + 1);
+
+          await Clients.findByIdAndUpdate(cli.id, {
+            "$set": {
+              passwordResetToken: token,
+              passwordResetExpires: now,
+            }
+          });
+          const email = new Mail();
+          email.transporter().sendMail(Mail.mailer({
+            to: cli.email,
+            subject: 'Recuperação de senha',
+            body: passwordRecoverTemplate({token: token}),
+          }), (err) => {
+            if (err) {
+              return res.status(400).json(ApiResponse.unknownError({error: err}))
+            } else {
+              return res.status(200).json(ApiResponse.returnSucess());
+            }
+          })
+
+        }
+      }
+    } catch (e) {
+      return res.status(500).json(ApiResponse.returnError({message: e}));
     }
   };
 }
