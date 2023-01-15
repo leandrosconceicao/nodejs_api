@@ -4,10 +4,12 @@ const clientsSchema = new mongoose.Schema({
     _id: { type: String },
     cgc: {type: String, required: true, unique: true},
     name: { type: String },
-    email: { type: String, required: true, unique: true},
-    password: { type: String},
+    email: { type: String, required: true, unique: true, lowercase: true},
+    password: { type: String, select: false},
     isValid: { type: Boolean, default: undefined},
     phoneNumber: { type: String },
+    passwordResetToken: {type: String, select: false},
+    passwordResetExpires: {type: Date, select: false},
     address: {
         type: [{
                 id: String,
