@@ -1,13 +1,14 @@
 import express from 'express';
 import ClientController from '../controllers/clients/clientsController.js';
-import endpoints from '../models/endpoints.js';
-// import validateToken from "../middlewares/tokenController.js";
+import validateToken from '../middlewares/tokenController.js';
+import Endpoints from '../models/endpoints.js';
 
 const router = express.Router();
 
 router
-    .get(`${endpoints.clientsValidation}/:id`, ClientController.validate)
-    .get(endpoints.clients_forgot_password, ClientController.forgotPassword)
-    .patch(`${endpoints.clients_recover_password}`, ClientController.recoverPassword)
+    .get(`${Endpoints.clientsValidation}/:id`, ClientController.validate)
+    .post(Endpoints.clients_forgot_password, ClientController.forgotPassword)
+    .post(Endpoints.clients_recover_password, ClientController.recoverPassword)
+    .patch(`${Endpoints.clients_update_password}`, validateToken, ClientController.updatePassword)
 
 export default router;
