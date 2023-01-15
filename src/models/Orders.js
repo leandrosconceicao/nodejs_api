@@ -2,10 +2,11 @@ import mongoose from "mongoose";
 
 const ordersSchema = new mongoose.Schema({
   _id: { type: String },
+  orderNumber: {type: Number},
   mesa: { type: String },
   idMesa: { type: String },
   diaOperacao: { type: String },
-  data: { type: String },
+  data: { type: Date },
   orderType: { type: String },
   accepted: { type: Boolean },
   deliveryStatus: {type: String},
