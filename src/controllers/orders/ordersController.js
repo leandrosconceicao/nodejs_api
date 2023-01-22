@@ -27,14 +27,14 @@ class OrdersController {
     }
     if (Validators.checkField(query.isTableOrders)) {
       if (query.isTableOrders) {
-        or.idMesa = { $ne: "" };
+        or.tableId = { $ne: "" };
       }
     }
     if (Validators.checkField(query.clientId)) {
       or["client._id"] = query.clientId;
     }
     if (Validators.checkField(query.idTable)) {
-      or.idMesa = query.idTable;
+      or.tableId = query.idTable;
     }
     if (
       Validators.checkField(query.excludeStatus) &&
@@ -46,13 +46,10 @@ class OrdersController {
       or.accountStatus = query.accountStatus;
     }
     if (Validators.checkField(query.saller)) {
-      or.operador = query.saller;
+      or.saller = query.saller;
     }
     if (Validators.checkField(query.storeCode)) {
       or.storeCode = query.storeCode;
-    }
-    if (Validators.checkField(query.diaOperacao)) {
-      or.diaOperacao = query.operationDay;
     }
     console.log(or);
     Orders.find(or, (err, order) => {
