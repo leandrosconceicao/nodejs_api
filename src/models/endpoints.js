@@ -11,6 +11,7 @@ class Endpoints {
     static establishments = '/establishments';
     static users = '/users';
     static clients = '/clients';
+    static apps = '/apps';
     static clientsValidation = `/validation`;
     static clients_update_password = '/clients/update_password';
     static clients_recover_password = '/clients/recover_password';
