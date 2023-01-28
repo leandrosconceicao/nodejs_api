@@ -11,6 +11,7 @@ import ApiResponse from "../models/ApiResponse.js";
 import events from "./eventsRoutes.js";
 import validation from "./validationsRoutes.js";
 import queue from './queueRoutes.js';
+import apps from './appsRoutes.js';
 
 const router = (app) => {
 
@@ -31,6 +32,7 @@ const router = (app) => {
         events,
         validation,
         queue,
+        apps,
     )
 }
 
