@@ -18,47 +18,55 @@ class OrdersController {
     }
   };
 
-  static findAll = (req, res) => {
-    let query = req.query;
-    console.log(query);
-    let or = {};
-    if (Validators.checkField(query.id)) {
-      or._id = query.id;
-    }
-    if (Validators.checkField(query.isTableOrders)) {
-      if (query.isTableOrders) {
-        or.tableId = { $ne: "" };
+  static async findAll(req, res) {
+    try {
+      let query = req.query;
+      let sort = {};
+      let or = {};
+      if (Validators.checkField(req.headers.orderby) && Validators.checkField(req.headers.ordenation)) {
+        sort[`${req.headers.orderby}`] = req.headers.ordenation;
       }
-    }
-    if (Validators.checkField(query.clientId)) {
-      or["client._id"] = query.clientId;
-    }
-    if (Validators.checkField(query.idTable)) {
-      or.tableId = query.idTable;
-    }
-    if (
-      Validators.checkField(query.excludeStatus) &&
-      Validators.checkField(query.status)
-    ) {
-      or.accountStatus = { $nin: [query.status, "Fechada"] };
-    }
-    if (Validators.checkField(query.accountStatus)) {
-      or.accountStatus = query.accountStatus;
-    }
-    if (Validators.checkField(query.saller)) {
-      or.saller = query.saller;
-    }
-    if (Validators.checkField(query.storeCode)) {
-      or.storeCode = query.storeCode;
-    }
-    console.log(or);
-    Orders.find(or, (err, order) => {
-      if (err) {
-        res.status(500).json(ApiResponse.dbError(err));
+      if (Validators.checkField(query.from) && Validators.checkField(query.to)) {
+        or.date = {$gte: new Date(query.from), $lte: new Date(query.to)}
+      }
+      if (Validators.checkField(query.id)) {
+        or._id = query.id;
+      }
+      if (Validators.checkField(query.isTableOrders)) {
+        if (query.isTableOrders) {
+          or.tableId = { $ne: "" };
+        }
+      }
+      if (Validators.checkField(query.clientId)) {
+        or["client._id"] = query.clientId;
+      }
+      if (Validators.checkField(query.idTable)) {
+        or.tableId = query.idTable;
+      }
+      if (
+        Validators.checkField(query.excludeStatus) &&
+        Validators.checkField(query.status)
+      ) {
+        or.accountStatus = { $nin: [query.status, "Fechada"] };
+      }
+      if (Validators.checkField(query.accountStatus)) {
+        or.accountStatus = query.accountStatus;
+      }
+      if (Validators.checkField(query.saller)) {
+        or.saller = query.saller;
+      }
+      if (Validators.checkField(query.storeCode)) {
+        or.storeCode = query.storeCode;
+      }
+      let orders = await Orders.find(or).sort(sort);
+      if (!orders) {
+        return res.status(400).json(ApiResponse.dbError());
       } else {
-        res.status(200).json(ApiResponse.returnSucess(order));
+        return res.status(200).json(ApiResponse.returnSucess(orders));
       }
-    });
+    } catch (e) {
+      return res.status(500).json(ApiResponse.dbError(e));
+    }
   };
 
   static post = (req, res) => {
