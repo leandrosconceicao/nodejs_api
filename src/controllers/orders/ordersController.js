@@ -69,19 +69,29 @@ class OrdersController {
     }
   };
 
-  static post = (req, res) => {
-    let body = req.body;
-    if (Validators.checkField(body.storeCode)) {
-      let order = new Orders(body);
-      order.save((err) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
+  static async post(req, res) {
+    try { 
+      let body = req.body;
+      if (!Validators.checkField(body.storeCode)) {
+        res.status(406).json(ApiResponse.parameterNotFound("(storeCode)"));
+      } else {
+        let order = new Orders(body);
+        order.date = Date.now();
+        order.payment.data = Date.now();
+        let or = await order.save();
+        if (!or) {
+          res.status(400).json(ApiResponse.returnError('Ocorreu um problema para salvar o pedido'));
         } else {
-          res.status(201).json(ApiResponse.returnSucess());
+          const newOrder = await Orders.findById(or.id);
+          if (!newOrder) {
+            res.status(400).json(ApiResponse.returnError('Houve um problema com a requisição'));
+          } else {
+            res.status(201).json(ApiResponse.returnSucess(newOrder));
+          }
         }
-      });
-    } else {
-      res.status(406).json(ApiResponse.parameterNotFound("(storeCode)"));
+      }
+    } catch (e) {
+      res.status(500).json(ApiResponse.dbError(e));
     }
   };
 
