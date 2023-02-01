@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const ordersSchema = new mongoose.Schema({
-  // _id: { type: String},
+  pedidosId: {type: Number},
   tableDescription: { type: String },
   tableId: { type: String },
   date: { type: Date },
@@ -60,7 +60,7 @@ const ordersSchema = new mongoose.Schema({
     id: String,
     tipo: String,
     operador: String,
-    data: String,
+    data: {type: Date},
     values: {
       type: [
         {
