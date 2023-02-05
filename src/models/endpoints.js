@@ -18,6 +18,8 @@ class Endpoints {
     static clients_forgot_password = '/clients_forgot_password';
     static events = '/events';
     static queue = '/queue';
+    static reports = '/reports';
+    static quantSales = `${this.reports}/quantify_sales`;
 }
 
 export default Endpoints;

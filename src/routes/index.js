@@ -12,6 +12,7 @@ import events from "./eventsRoutes.js";
 import validation from "./validationsRoutes.js";
 import queue from './queueRoutes.js';
 import apps from './appsRoutes.js';
+import reports from './reportsRoutes.js';
 
 const router = (app) => {
 
@@ -33,6 +34,7 @@ const router = (app) => {
         validation,
         queue,
         apps,
+        reports,
     )
 }
 
