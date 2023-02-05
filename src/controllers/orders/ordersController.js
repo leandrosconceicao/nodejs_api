@@ -1,6 +1,7 @@
 import Validators from "../../utils/utils.js";
 import Orders from "../../models/Orders.js";
 import ApiResponse from "../../models/ApiResponse.js";
+import TokenGenerator from "../../utils/tokenGenerator.js";
 
 class OrdersController {
   static findOne = (req, res) => {
@@ -25,6 +26,9 @@ class OrdersController {
       let or = {};
       if (Validators.checkField(req.headers.orderby) && Validators.checkField(req.headers.ordenation)) {
         sort[`${req.headers.orderby}`] = req.headers.ordenation;
+      }
+      if (Validators.checkField(query.isPreparation)) {
+        or.products = {$elemMatch: {"setupIsFinished": false, "needsPreparation": true}};
       }
       if (Validators.checkField(query.from) && Validators.checkField(query.to)) {
         or.date = {$gte: new Date(query.from), $lte: new Date(query.to)}
@@ -55,6 +59,9 @@ class OrdersController {
       if (Validators.checkField(query.saller)) {
         or.saller = query.saller;
       }
+      if (Validators.checkField(query.accepted)) {
+        or.accepted = query.accepted;
+      }
       if (Validators.checkField(query.storeCode)) {
         or.storeCode = query.storeCode;
       }
@@ -76,6 +83,7 @@ class OrdersController {
         res.status(406).json(ApiResponse.parameterNotFound("(storeCode)"));
       } else {
         let order = new Orders(body);
+        order._id = TokenGenerator.generateId();
         order.date = Date.now();
         order.payment.data = Date.now();
         let or = await order.save();
@@ -95,7 +103,7 @@ class OrdersController {
     }
   };
 
-  static put = (req, res) => {
+  static pushNewItems = (req, res) => {
     let body = req.body;
     if (!Validators.checkField(body.id)) {
       res.status(406).json(ApiResponse.parameterNotFound("(id)"));
@@ -117,6 +125,27 @@ class OrdersController {
       }
     );
   };
+
+  static async update(req, res) {
+    try {
+      let query = req.body.query
+      let data = req.body.data;
+      if (!Validators.checkField(query)) {
+        return res.status(406).json(ApiResponse.parameterNotFound('(query)'));
+      } else if (!Validators.checkField(data)) {
+        return res.status(406).json(ApiResponse.parameterNotFound('(data)'));
+      } else {
+        const update = await Orders.updateOne(query, {$set: data})
+        if (!update) {
+          return res.status(400).json(ApiResponse.returnError('Nenhum dado atualizado, verifique os filtros'))
+        } else {
+          return res.status(200).json(ApiResponse.returnSucess());
+        }
+      }
+    } catch (e) {
+      return res.status(500).json(ApiResponse.dbError(e));
+    }
+  }
 }
 
 export default OrdersController;
