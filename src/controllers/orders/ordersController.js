@@ -103,27 +103,26 @@ class OrdersController {
     }
   };
 
-  static pushNewItems = (req, res) => {
-    let body = req.body;
-    if (!Validators.checkField(body.id)) {
-      res.status(406).json(ApiResponse.parameterNotFound("(id)"));
-    }
-    if (!Validators.checkField(body.orders)) {
-      res.status(406).json(ApiResponse.parameterNotFound("(orders)"));
-    }
-    Orders.findByIdAndUpdate(
-      body.id,
-      {
-        $push: { pedidos: body.orders },
-      },
-      (err) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(200).json(ApiResponse.returnSucess());
-        }
+  static async pushNewItems(req, res) {
+    try {
+      let body = req.body;
+      if (!Validators.checkField(body.id)) {
+        res.status(406).json(ApiResponse.parameterNotFound("(id)"));
       }
-    );
+      if (!Validators.checkField(body.orders)) {
+        res.status(406).json(ApiResponse.parameterNotFound("(orders)"));
+      }
+      const order = await Orders.findByIdAndUpdate(
+        body.id, {$push: { products: body.orders }}
+      );
+      if (!order) {
+        return res.status(400).json(ApiResponse.returnError({message: 'Nenhum dado atualizado'}));
+      } else {
+        return res.status(200).json(ApiResponse.returnSucess(order));
+      }
+    } catch (e) {
+      return res.status(500).json(ApiResponse.dbError(e));
+    }
   };
 
   static async update(req, res) {
