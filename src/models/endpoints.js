@@ -11,10 +11,15 @@ class Endpoints {
     static establishments = '/establishments';
     static users = '/users';
     static clients = '/clients';
+    static apps = '/apps';
     static clientsValidation = `/validation`;
+    static clients_update_password = '/clients/update_password';
     static clients_recover_password = '/clients/recover_password';
     static clients_forgot_password = '/clients_forgot_password';
     static events = '/events';
+    static queue = '/queue';
+    static reports = '/reports';
+    static quantSales = `${this.reports}/quantify_sales`;
 }
 
 export default Endpoints;

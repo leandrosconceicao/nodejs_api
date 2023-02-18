@@ -1,26 +1,26 @@
 import mongoose from "mongoose";
 
 const ordersSchema = new mongoose.Schema({
-  _id: { type: String },
-  mesa: { type: String },
-  idMesa: { type: String },
-  diaOperacao: { type: String },
-  data: { type: String },
+  _id: {type: String},
+  pedidosId: {type: Number},
+  tableDescription: { type: String },
+  tableId: { type: String },
+  date: { type: Date },
   orderType: { type: String },
   accepted: { type: Boolean },
   deliveryStatus: {type: String},
-  pedidos: {
+  total: {type: Number},
+  products: {
     type: [
       {
         id: String,
-        qtProdutos: Number,
-        opcao: String,
+        quantity: Number,
+        productName: String,
         productId: Number,
-        descPedido: String,
-        preparacao: Boolean,
-        preparacaoConcluida: Boolean,
-        valPedido: Number,
-        precoUnitario: Number,
+        orderDescription: String,
+        needsPreparation: Boolean,
+        setupIsFinished: Boolean,
+        unitPrice: Number,
         addOnes: {
           type: [
             {
@@ -35,7 +35,7 @@ const ordersSchema = new mongoose.Schema({
       },
     ],
   },
-  pago: { type: Boolean },
+  isPayed: { type: Boolean },
   client: {
     _id: { type: String },
     name: { type: String },
@@ -56,25 +56,21 @@ const ordersSchema = new mongoose.Schema({
   clientName: { type: String },
   obs: { type: String },
   accountStatus: { type: String },
-  operador: { type: String },
+  saller: { type: String },
   storeCode: { type: String },
   payment: {
-    type: [
-      {
-        id: String,
-        tipo: String,
-        operador: String,
-        data: String,
-        values: {
-          type: [
-            {
-              form: String,
-              value: Number,
-            },
-          ],
+    id: String,
+    tipo: String,
+    operador: String,
+    data: {type: Date},
+    values: {
+      type: [
+        {
+          form: String,
+          value: Number,
         },
-      },
-    ],
+      ],
+    },
   },
   versionKey: false,
 });

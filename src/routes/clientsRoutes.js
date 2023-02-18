@@ -6,7 +6,7 @@ const router = express.Router();
 
 router
     .get(endpoints.clients, validateToken, ClientController.findAll)
-    .get(`${endpoints.clients}/:id`, validateToken, ClientController.findOne)
+    .get(`${endpoints.clients}/:id`, ClientController.findOne)
     .post(endpoints.clients, ClientController.add)
     .post(`${endpoints.clients}/authentication`, ClientController.authentication)
     .put(endpoints.clients, ClientController.update)

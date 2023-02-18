@@ -9,6 +9,7 @@ router
     .get(Endpoints.orders, OrdersController.findAll)
     .get(`${Endpoints.orders}/:id`, OrdersController.findOne)
     .post(Endpoints.orders, OrdersController.post)
-    .put(`${Endpoints.orders}/items`, validateToken, OrdersController.put)
+    .put(Endpoints.orders, validateToken, OrdersController.update)
+    .put(`${Endpoints.orders}/items`, validateToken, OrdersController.pushNewItems)
 
 export default router;
