@@ -20,6 +20,9 @@ class Endpoints {
     static queue = '/queue';
     static reports = '/reports';
     static quantSales = `${this.reports}/quantify_sales`;
+    static bakery = '/bakery';
+    static bakery_ingredients = `${this.bakery}/ingredients`
+    static bakery_recipes = `${this.bakery}/recipes`;
 }
 
 export default Endpoints;
