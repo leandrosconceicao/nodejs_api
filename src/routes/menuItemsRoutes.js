@@ -1,6 +1,6 @@
 import express from "express";
 import MenuItemsController from "../controllers/products/menuItemsController.js";
-import Endpoints from "../models/endpoints.js";
+import Endpoints from "../models/Endpoints.js";
 
 const router = express.Router();
 

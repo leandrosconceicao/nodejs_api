@@ -1,7 +1,7 @@
 import express from "express";
 import validateToken from "../middlewares/tokenController.js";
 import AppsController from '../controllers/apps/appsControllers.js';
-import Endpoints from "../models/endpoints.js";
+import Endpoints from "../models/Endpoints.js";
 
 const router = express.Router();
 

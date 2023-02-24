@@ -1,6 +1,6 @@
 import express from "express";
 import UserController from "../controllers//users/userController.js";
-import Endpoints from "../models/endpoints.js";
+import Endpoints from "../models/Endpoints.js";
 import validateToken from "../middlewares/tokenController.js";
 
 
