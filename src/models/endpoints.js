@@ -23,6 +23,7 @@ class Endpoints {
     static bakery = '/bakery';
     static bakery_ingredients = `${this.bakery}/ingredients`
     static bakery_recipes = `${this.bakery}/recipes`;
+    static bakery_configs = `${this.bakery}/configs`;
 }
 
 export default Endpoints;
