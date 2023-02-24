@@ -35,7 +35,7 @@ class IngredientsController {
             if (!process) {
                 return res.status(500).json(ApiResponse.dbError(process)); 
             }
-            return res.status(200).json(ApiResponse.returnSucess(process));
+            return res.status(200).json(ApiResponse.returnSucess());
         } catch (e) {
             return res.status(500).json(ApiResponse.dbError(e));
         }
@@ -51,7 +51,7 @@ class IngredientsController {
             if (!process.deletedCount) {
                 return res.status(400).json(ApiResponse.noDataFound());
             }
-            return res.status(200).json(ApiResponse.returnSucess());
+            return res.status(200).json(ApiResponse.returnSucess(process));
         } catch (e) {   
             return res.status(500).json(ApiResponse.dbError(e));
         }

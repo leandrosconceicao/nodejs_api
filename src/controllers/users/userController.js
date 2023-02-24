@@ -1,11 +1,13 @@
-import users from "../../models/Users.js";
+import Users from "../../models/Users.js";
+import Establishments from "../../models/Establishments.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
 import PassGenerator from "../../utils/passGenerator.js";
+import Validators from "../../utils/utils.js";
 
 class UserController {
   static add = (req, res) => {
-    let user = new users(req.body);
+    let user = new Users(req.body);
     user.pass = new PassGenerator(user.pass).build();
     user.save((err, users) => {
       if (err) {
@@ -18,7 +20,7 @@ class UserController {
 
   static delete = (req, res) => {
     let id = req.body.id;
-    users.findByIdAndDelete(id, (err) => {
+    Users.findByIdAndDelete(id, (err) => {
       if (err) {
         res.status(500).json(ApiResponse.dbError(err));
       } else {
@@ -28,7 +30,7 @@ class UserController {
   };
 
   static update = (req, res) => {
-    users.findByIdAndUpdate(id, { $set: data }, (err) => {
+    Users.findByIdAndUpdate(id, { $set: data }, (err) => {
       if (err) {
         res.status(500).json(ApiResponse.dbError(err));
       } else {
@@ -38,7 +40,7 @@ class UserController {
   };
 
   static findAll = (req, res) => {
-    users.find(req.query, (err, users) => {
+    Users.find(req.query, (err, users) => {
       if (err) {
         res.status(500).json(ApiResponse.dbError(err));
       } else {
@@ -47,31 +49,33 @@ class UserController {
     });
   };
 
-  static authenticate = (req, res) => {
+  static async authenticate(req, res) {
     try {
-      const hashPass = new PassGenerator(req.body.password).build();
-      users.findOne({ _id: req.body.email, pass: hashPass }, (err, users) => {
-        if (err) {
-          res
-            .status(500)
-            .json(ApiResponse.returnError(`Ocorreu um problema ${err}`));
-        } else {
-          if (users) {
-            const token = TokenGenerator.generate(req.body.email);
-            res.set("Authorization", token);
-            res.set("Access-Control-Expose-Headers", "*");
-            res.status(200).json(ApiResponse.returnSucess(users));
-          } else {
-            res
-              .status(400)
-              .json(ApiResponse.returnError("Dados incorretos ou inválidos."));
-          }
-        }
+      let body = req.body;
+      if (!Validators.checkField(body.email)) {
+        return res.status(406).json(ApiResponse.parameterNotFound('(email)'));
+      }
+      if (!Validators.checkField(body.password)) {
+        return res.status(406).json(ApiResponse.parameterNotFound('(password)'));
+      }
+      const hashPass = new PassGenerator(body.password).build();
+      const users = await Users.findOne({
+        _id: body.email,
+        pass: hashPass,
       });
+      if (!users) {
+        return res.status(400).json(ApiResponse.returnError("Dados incorretos ou inválidos."));
+      } else {
+        users.ests = await Establishments.find({_id: {$in: users.establishments}})
+        const token = TokenGenerator.generate(body.email);
+        res.set("Authorization", token);
+        res.set("Access-Control-Expose-Headers", "*");
+        return res.status(200).json(ApiResponse.returnSucess(users));
+      }
     } catch (e) {
-      res.status(500).json(ApiResponse.unknownError(e));
+      return res.status(500).json(ApiResponse.unknownError(e));
     }
-  };
+  }
 }
 
 export default UserController;
