@@ -1,6 +1,6 @@
 import express from 'express';
 import ReportsControllers from '../controllers/reports/reportsController.js';
-import Endpoints from '../models/endpoints.js';
+import Endpoints from "../models/Endpoints.js"
 import validateToken from '../middlewares/tokenController.js';
 
 const router = express.Router();

@@ -2,7 +2,7 @@ import express from 'express';
 import IngredientsController from '../controllers/bakery/ingredientsController.js';
 import RecipesController from '../controllers/bakery/recipesController.js';
 import ConfigsController from '../controllers/bakery/configsController.js';
-import Endpoints from '../models/endpoints.js';
+import Endpoints from "../models/Endpoints.js"
 // import validateToken from '../middlewares/tokenController.js';
 
 const router = express.Router();

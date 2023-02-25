@@ -1,6 +1,6 @@
 import express from 'express';
 import CategoryController from '../controllers/products/categoriesController.js';
-import endpoints from '../models/endpoints.js';
+import endpoints from "../models/Endpoints.js"
 import validateToken from '../middlewares/tokenController.js';
 
 const router = express.Router();
