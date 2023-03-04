@@ -47,8 +47,8 @@ class IngredientsController {
             if (!Validators.checkField(body._id)) {
                 return res.status(406).json(ApiResponse.parameterNotFound('(_id)'))
             }
-            let process = await Ingredients.deleteOne(body);
-            if (!process.deletedCount) {
+            let process = await Ingredients.findByIdAndRemove(body._id);
+            if (!process) {
                 return res.status(400).json(ApiResponse.noDataFound());
             }
             return res.status(200).json(ApiResponse.returnSucess(process));
