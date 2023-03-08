@@ -2,6 +2,7 @@ import express from 'express';
 import IngredientsController from '../controllers/bakery/ingredientsController.js';
 import RecipesController from '../controllers/bakery/recipesController.js';
 import ConfigsController from '../controllers/bakery/configsController.js';
+import ExpansesController from '../controllers/bakery/expansesController.js';
 import Endpoints from "../models/Endpoints.js"
 // import validateToken from '../middlewares/tokenController.js';
 
@@ -22,5 +23,8 @@ router
     .post(Endpoints.bakery_configs, ConfigsController.post)
     .put(Endpoints.bakery_configs, ConfigsController.update)
     .delete(Endpoints.bakery_configs, ConfigsController.delete)
+    .get(Endpoints.bakery_expanses, ExpansesController.findAll)
+    .post(Endpoints.bakery_expanses, ExpansesController.post)
+    .delete(Endpoints.bakery_expanses, ExpansesController.delete)
 
 export default router;
