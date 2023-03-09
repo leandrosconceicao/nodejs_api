@@ -26,5 +26,6 @@ router
     .get(Endpoints.bakery_expanses, ExpansesController.findAll)
     .post(Endpoints.bakery_expanses, ExpansesController.post)
     .delete(Endpoints.bakery_expanses, ExpansesController.delete)
+    .put(Endpoints.bakery_expanses, ExpansesController.update)
 
 export default router;

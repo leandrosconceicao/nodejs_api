@@ -4,7 +4,7 @@ const configSchema = new mongoose.Schema({
     _id: {type: String},
     storeCode: {type: String, required: true},
     description: {type: String, required: true},
-    value: {type: Number, default: 0.0},
+    value: {type: mongoose.Types.Decimal128, default: 0},
     createdAt: {type: Date, default: new Date()},
 })
 

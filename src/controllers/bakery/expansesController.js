@@ -15,7 +15,18 @@ class ExpanseController {
             if (!data) {
                 return res.status(400).json(ApiResponse.noDataFound())
             }
-            return res.status(200).json(ApiResponse.returnSucess(data));
+            let expanses = [];
+            for (let i = 0; i < data.length; i++) {
+                let value = data[i];
+                expanses.push({
+                    "_id": value._id,
+                    "storeCode": value.storeCode,
+                    "description": value.description,
+                    "createdAt": value.createdAt,
+                    "value": parseFloat(value.value)
+                })
+            }
+            return res.status(200).json(ApiResponse.returnSucess(expanses));
         } catch (e) {
             return res.status(500).json(ApiResponse.dbError(e));
         }
@@ -55,6 +66,25 @@ class ExpanseController {
             }
             return res.status(200).json(ApiResponse.returnSucess(process));
             
+        } catch (e) {
+            return res.status(500).json(ApiResponse.dbError(e));
+        }
+    }
+
+    static async update(req, res) {
+        try {
+            let body = req.body;
+            if (!Validators.checkField(body.id)) {
+                return res.status(406).json(ApiResponse.parameterNotFound('(id)'));
+            }
+            if (!Validators.checkField(body.data)) {
+                return res.status(406).json(ApiResponse.parameterNotFound('(data)'));
+            }
+            const process = await Expanse.findByIdAndUpdate(body.id, body.data);
+            if (!process) {
+                return res.status(400).json(ApiResponse.returnError('Não foi possível atualizar o registro, verifique os filtros utilizados'));
+            }
+            return res.status(200).json(ApiResponse.returnSucess(process));
         } catch (e) {
             return res.status(500).json(ApiResponse.dbError(e));
         }
