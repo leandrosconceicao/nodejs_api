@@ -10,6 +10,11 @@ const ordersSchema = new mongoose.Schema({
   accepted: { type: Boolean },
   deliveryStatus: {type: String},
   total: {type: Number},
+  status: {
+    type: "String",
+    default: "pending",
+    enum: ['pending', 'cancelled', 'payed']
+  },
   products: {
     type: [
       {
