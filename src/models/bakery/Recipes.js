@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import TokenGenerator from "../../utils/tokenGenerator.js";
 import {ingredientsBody} from './Ingredients.js';
 
 const recipeSchema = new mongoose.Schema({
@@ -12,6 +11,6 @@ const recipeSchema = new mongoose.Schema({
     }
 })
 
-const Recipes = mongoose.model('recipes', recipeSchema);
+const Recipes = mongoose.model('bakeryrecipes', recipeSchema);
 
 export default Recipes;

@@ -8,6 +8,23 @@ const userSchema = new mongoose.Schema({
     username: {type: String},
     ativo: {type: Boolean},
     establishments: {type: Array},
+    ests: {
+        type: [{
+            _id: Number,
+            storeName: String,
+            stores: {
+                type: [{
+                    id: String,
+                    location: String,
+                    url: String,
+                    isOpen: Boolean
+                }],
+                default: undefined
+            },
+            ownerId: String,
+            logo: String,
+        }]
+    },
     token: {type: String},
 });
 

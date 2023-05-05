@@ -59,14 +59,15 @@ class UserController {
         return res.status(406).json(ApiResponse.parameterNotFound('(password)'));
       }
       const hashPass = new PassGenerator(body.password).build();
-      const users = await Users.findOne({
+      let users = await Users.findOne({
         _id: body.email,
         pass: hashPass,
       });
       if (!users) {
         return res.status(400).json(ApiResponse.returnError("Dados incorretos ou inválidos."));
       } else {
-        users.ests = await Establishments.find({_id: {$in: users.establishments}})
+        let ests = await Establishments.find({_id: {$in: users.establishments}})
+        users.ests = ests;
         const token = TokenGenerator.generate(body.email);
         res.set("Authorization", token);
         res.set("Access-Control-Expose-Headers", "*");

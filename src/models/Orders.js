@@ -5,11 +5,21 @@ const ordersSchema = new mongoose.Schema({
   pedidosId: {type: Number},
   tableDescription: { type: String },
   tableId: { type: String },
-  date: { type: Date },
-  orderType: { type: String },
+  date: { type: Date , default: new Date()},
+  orderType: { type: String,
+    default: 'frontDesk', enum: ['frontDesk', 'account', 'delivery']},
   accepted: { type: Boolean },
   deliveryStatus: {type: String},
+  lastModified: {
+    date: {type: Date},
+    user: {type: String},
+  },
   total: {type: Number},
+  status: {
+    type: "String",
+    default: "pending",
+    enum: ['pending', 'cancelled', 'payed']
+  },
   products: {
     type: [
       {

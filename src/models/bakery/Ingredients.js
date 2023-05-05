@@ -6,11 +6,12 @@ const ingredientsBody = {
     storeCode: {type: String, required: true},
     unitOfMeasurement: {type: String, default: "un"},
     quantInPackage: {type: Number, default: 1},
+    createdAt: {type: Date, default: new Date()},
     cost: {type: Number, default: 0.0},
 };
 const ingredientsSchema = new mongoose.Schema(ingredientsBody)
 
-const Ingredients = mongoose.model('ingredients', ingredientsSchema)
+const Ingredients = mongoose.model('bakeryingredients', ingredientsSchema)
 
 export {Ingredients, ingredientsBody};
 
