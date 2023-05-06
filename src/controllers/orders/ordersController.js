@@ -17,18 +17,21 @@ class OrdersController {
         }
       });
     }
-  };
+  }
 
   static async findAll(req, res) {
     try {
       let query = req.query;
-      let sort = {};
-      let or = {};
+      let sort = {}
+      let or = {}
       if (Validators.checkField(req.headers.orderby) && Validators.checkField(req.headers.ordenation)) {
         sort[`${req.headers.orderby}`] = req.headers.ordenation;
       }
       if (Validators.checkField(query.isPreparation)) {
-        or.products = {$elemMatch: {"setupIsFinished": false, "needsPreparation": true}};
+        or.products = {$elemMatch: {"setupIsFinished": false, "needsPreparation": true}}
+      }
+      if (Validators.checkField(query.type)) {
+        or.orderType = query.type;
       }
       if (Validators.checkField(query.from) && Validators.checkField(query.to)) {
         or.date = {$gte: new Date(query.from), $lte: new Date(query.to)}
@@ -38,7 +41,7 @@ class OrdersController {
       }
       if (Validators.checkField(query.isTableOrders)) {
         if (query.isTableOrders) {
-          or.tableId = { $ne: "" };
+          or.tableId = { $ne: "" }
         }
       }
       if (Validators.checkField(query.clientId)) {
@@ -51,7 +54,7 @@ class OrdersController {
         Validators.checkField(query.excludeStatus) &&
         Validators.checkField(query.status)
       ) {
-        or.accountStatus = { $nin: [query.status, "Fechada"] };
+        or.accountStatus = { $nin: [query.status, "Fechada"] }
       }
       if (Validators.checkField(query.accountStatus)) {
         or.accountStatus = query.accountStatus;
@@ -74,7 +77,7 @@ class OrdersController {
     } catch (e) {
       return res.status(500).json(ApiResponse.dbError(e));
     }
-  };
+  }
 
   static async post(req, res) {
     try { 
@@ -101,7 +104,7 @@ class OrdersController {
     } catch (e) {
       res.status(500).json(ApiResponse.dbError(e));
     }
-  };
+  }
 
   static async pushNewItems(req, res) {
     try {
@@ -123,7 +126,7 @@ class OrdersController {
     } catch (e) {
       return res.status(500).json(ApiResponse.dbError(e));
     }
-  };
+  }
 
   static async update(req, res) {
     try {

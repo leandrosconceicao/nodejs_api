@@ -1,8 +1,10 @@
+
 class ApiResponse {
-  constructor({ statusProcess = false, message = "", dados = null }) {
+  constructor({ statusProcess = false, message = "", dados = null , tecnicalDescription = null}) {
     this.statusProcess = statusProcess;
     this.message = message;
     this.dados = dados;
+    this.tecnicalDescription = tecnicalDescription;
   }
 
   static returnSucess(data) {
@@ -17,9 +19,10 @@ class ApiResponse {
     return new ApiResponse({ message: message });
   }
 
-  static dbError(errorMessage) {
+  static dbError(errorMessage, stackTrace) {
     return new ApiResponse({
       message: `Requisição não pode ser processada pelo servidor ${errorMessage}`,
+      tecnicalDescription: stackTrace
     });
   }
 

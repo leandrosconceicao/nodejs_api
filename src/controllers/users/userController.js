@@ -30,7 +30,8 @@ class UserController {
   };
 
   static update = (req, res) => {
-    Users.findByIdAndUpdate(id, { $set: data }, (err) => {
+    let body = req.body;
+    Users.findByIdAndUpdate(body.id, { $set: body.data }, (err) => {
       if (err) {
         res.status(500).json(ApiResponse.dbError(err));
       } else {

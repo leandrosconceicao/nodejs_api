@@ -14,6 +14,7 @@ import queue from './queueRoutes.js';
 import apps from './appsRoutes.js';
 import reports from './reportsRoutes.js';
 import bakery from './bakeryRoutes.js';
+import config from './configRoutes.js';
 
 const router = (app) => {
 
@@ -37,6 +38,7 @@ const router = (app) => {
         apps,
         reports,
         bakery,
+        config,
     )
 }
 

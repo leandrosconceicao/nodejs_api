@@ -9,7 +9,6 @@ const ordersSchema = new mongoose.Schema({
   orderType: { type: String,
     default: 'frontDesk', enum: ['frontDesk', 'account', 'delivery']},
   accepted: { type: Boolean },
-  deliveryStatus: {type: String},
   lastModified: {
     date: {type: Date},
     user: {type: String},
@@ -18,7 +17,7 @@ const ordersSchema = new mongoose.Schema({
   status: {
     type: "String",
     default: "pending",
-    enum: ['pending', 'cancelled', 'payed']
+    enum: ['pending', 'cancelled', 'finished', 'onTheWay']
   },
   products: {
     type: [
