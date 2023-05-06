@@ -13,6 +13,7 @@ class Endpoints {
     static users = '/users';
     static clients = '/clients';
     static apps = '/apps';
+    static redis = '/redis';
     static clientsValidation = `/validation`;
     static clients_update_password = '/clients/update_password';
     static clients_recover_password = '/clients/recover_password';

@@ -15,6 +15,7 @@ import apps from './appsRoutes.js';
 import reports from './reportsRoutes.js';
 import bakery from './bakeryRoutes.js';
 import config from './configRoutes.js';
+import redis from './redisRouter.js';
 
 const router = (app) => {
 
@@ -39,6 +40,7 @@ const router = (app) => {
         reports,
         bakery,
         config,
+        redis,
     )
 }
 
