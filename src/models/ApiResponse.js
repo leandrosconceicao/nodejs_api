@@ -1,4 +1,4 @@
-class ApiResponse {
+class ApiResponse extends Error {
   constructor({
     statusProcess = false,
     message = "",
@@ -6,6 +6,7 @@ class ApiResponse {
     tecnical = null,
     status = 500,
   }) {
+    super();
     this.statusProcess = statusProcess;
     this.message = message;
     this.dados = dados;
@@ -22,10 +23,6 @@ class ApiResponse {
     });
   }
 
-  static returnError(message) {
-    return new ApiResponse({ message: message });
-  }
-
   static dbError(errorMessage) {
     return new ApiResponse({
       message: "O servidor não conseguiu processar a requisição",
@@ -38,35 +35,38 @@ class ApiResponse {
     return new ApiResponse({
       message: "Houve um problema com a requisição",
       tecnical: message,
-    });
-  }
-
-  static unknownError(error) {
-    return new ApiResponse({
-      message: `Ocorreu um erro desconhecido ${error}`,
+      status: 400,
     });
   }
 
   static parameterNotFound(message) {
     return new ApiResponse({
       message: `Parametro obrigatório é inválido ou não foi informado ${message}`,
+      status: 406,
     });
   }
 
   static unauthorized() {
-    return new ApiResponse({ message: "Token inválido ou não informado" });
+    return new ApiResponse({
+      message: "Token inválido ou não informado",
+      status: 401,
+    });
   }
 
   static tokenExpired() {
-    return new ApiResponse({ message: "Token expirado" });
+    return new ApiResponse({ message: "Token expirado", status: 401 });
   }
 
   static noDataFound() {
     return new ApiResponse({ message: "Nenhum dado encontrado" });
   }
 
-  sendResponse(res, status) {
-    res.status(status).json(this)
+  static pageNotFound() {
+    return new ApiResponse({ message: "Página não encontrada", status: 404 });
+  }
+
+  sendResponse(res) {
+    res.status(this.status).json(this);
   }
 }
 

@@ -89,7 +89,7 @@ class ProductController {
         if (db.modifiedCount > 0) {
             res.status(200).json(ApiResponse.returnSucess())
         } else {
-            res.status(400).json(ApiResponse.returnError('Nenhum dado atualizado, verifique os filtros.'))
+            res.status(400).json(ApiResponse.badRequest('Nenhum dado atualizado, verifique os filtros.'))
         }
       } else {
         res.status(400).json(ApiResponse.parameterNotFound());

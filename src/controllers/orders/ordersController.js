@@ -2,6 +2,7 @@ import Validators from "../../utils/utils.js";
 import Orders from "../../models/Orders.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 class OrdersController {
   static async findOne(req, res, next) {
@@ -9,9 +10,9 @@ class OrdersController {
       let id = req.params.id;
       const query = await Orders.findById(id);
       if (!query) {
-        return res.status(400).json(ApiResponse.badRequest());
+        next(new NotFoundError('Pedido não encontrado'));
       } else {
-        return res.status(200).json(ApiResponse.returnSucess(query != null ? [query] : []));
+        ApiResponse.returnSucess([query]).sendResponse(res);
       }
     } catch (e) {
       next(e);
@@ -69,9 +70,9 @@ class OrdersController {
       }
       let orders = await Orders.find(or).sort(sort);
       if (!orders) {
-        return res.status(400).json(ApiResponse.badRequest());
+        ApiResponse.badRequest().sendResponse(res);
       } else {
-        return res.status(200).json(ApiResponse.returnSucess(orders));
+        ApiResponse.returnSucess(orders).sendResponse(res);
       }
     } catch (e) {
       return next(e);
@@ -118,9 +119,9 @@ class OrdersController {
         body.id, {$push: { products: body.orders }}
       );
       if (!order) {
-        return res.status(400).json(ApiResponse.returnError({message: 'Nenhum dado atualizado'}));
+        ApiResponse.returnError({message: 'Nenhum dado atualizado'}).sendResponse(res);
       } else {
-        return res.status(200).json(ApiResponse.returnSucess(order));
+        ApiResponse.returnSucess(order).sendResponse(res);
       }
     } catch (e) {
       return next(e)
@@ -132,15 +133,15 @@ class OrdersController {
       let query = req.body.query
       let data = req.body.data;
       if (!Validators.checkField(query)) {
-        return res.status(406).json(ApiResponse.parameterNotFound('(query)'));
+        ApiResponse.parameterNotFound('(query)').sendResponse(res);
       } else if (!Validators.checkField(data)) {
-        return res.status(406).json(ApiResponse.parameterNotFound('(data)'));
+        ApiResponse.parameterNotFound('(data)').sendResponse(res);
       } else {
         const update = await Orders.updateOne(query, {$set: data})
         if (!update) {
-          return res.status(400).json(ApiResponse.returnError('Nenhum dado atualizado, verifique os filtros'))
+          ApiResponse.returnError('Nenhum dado atualizado, verifique os filtros').sendResponse(res);
         } else {
-          return res.status(200).json(ApiResponse.returnSucess());
+          ApiResponse.returnSucess().sendResponse(res);
         }
       }
     } catch (e) {

@@ -65,7 +65,7 @@ class UserController {
         pass: hashPass,
       });
       if (!users) {
-        return res.status(400).json(ApiResponse.returnError("Dados incorretos ou inválidos."));
+        return res.status(400).json(ApiResponse.badRequest("Dados incorretos ou inválidos."));
       } else {
         let ests = await Establishments.find({_id: {$in: users.establishments}})
         users.ests = ests;
@@ -75,7 +75,7 @@ class UserController {
         return res.status(200).json(ApiResponse.returnSucess(users));
       }
     } catch (e) {
-      return res.status(500).json(ApiResponse.unknownError(e));
+      return res.status(500).json(ApiResponse.badRequest(e));
     }
   }
 }

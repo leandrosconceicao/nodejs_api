@@ -6,9 +6,10 @@ import Mail from "../email/clientActivation.js";
 import clientActivationTemplate from "../email/templates/activateTemplate.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
 import passwordRecoverTemplate from "../email/templates/passwordRecoverTemplate.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 class ClientController {
-  static async authentication(req, res) {
+  static async authentication(req, res, next) {
     try {
       const hashpass = new PassGenerator(req.body.password).build();
       const client = await Clients.findOne({
@@ -20,27 +21,19 @@ class ClientController {
           const token = TokenGenerator.generate(req.body.email);
           res.set("Authorization", token);
           res.set("Access-Control-Expose-Headers", "*");
-          res.status(200).json(ApiResponse.returnSucess(client));
+          ApiResponse.returnSucess(client).sendResponse(res);
         } else {
-          res
-            .status(401)
-            .json(
-              ApiResponse.returnError(
-                "Cadastro não foi validado, verifique sua caixa de email e confirme clicando no link enviado"
-              )
-            );
+          ApiResponse.badRequest(
+            "Cadastro não foi validado, verifique sua caixa de email e confirme clicando no link enviado"
+          ).sendResponse(res);
         }
       } else {
-        res
-          .status(400)
-          .json(
-            ApiResponse.returnError(
-              "Usuário inválido ou não encontrado, verifique os dados e tente novamente."
-            )
-          );
+        ApiResponse.badRequest(
+          "Usuário inválido ou não encontrado, verifique os dados e tente novamente."
+        ).sendResponse;
       }
     } catch (e) {
-      res.status(500).json(ApiResponse.returnError(e));
+      next(e);
     }
   }
 
@@ -49,16 +42,11 @@ class ClientController {
     if (!Validators.checkField(id)) {
       res.status(406).json(ApiResponse.parameterNotFound("id"));
     } else {
-      Clients.findById(req.params.id, (err, client) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          if (!err) {
-            res.status(200).json(ApiResponse());
-          }
-          res.status(200).json(ApiResponse.returnSucess(client));
-        }
-      });
+      const client = await Clients.findById(req.params.id);
+      if (!client) {
+        next(new NotFoundError('Cliente não localizado'));
+      }
+      ApiResponse.returnSucess(client).sendResponse(res);
     }
   }
 
@@ -74,13 +62,11 @@ class ClientController {
       delete query.isActive;
     }
     let client = new Clients(query);
-    Clients.find(client, (err, cli) => {
-      if (err) {
-        res.status(500).json(ApiResponse.dbError(err));
-      } else {
-        res.status(200).json(ApiResponse.returnSucess(cli));
-      }
-    });
+    const q = await Clients.find(client);
+    if (!q) {
+      ApiResponse.badRequest((message = "Nenhum dado localizado"));
+    }
+    ApiResponse.returnSucess(cli).sendResponse(res);
   }
 
   static async add(req, res) {
@@ -91,7 +77,7 @@ class ClientController {
         if (err.code === 11000) {
           res
             .status(400)
-            .json(ApiResponse.returnError(`Atenção Usuário já cadastrado.`));
+            .json(ApiResponse.badRequest(`Atenção Usuário já cadastrado.`));
         } else {
           res.status(500).json(ApiResponse.dbError(err));
         }
@@ -124,7 +110,7 @@ class ClientController {
         res
           .status(400)
           .json(
-            ApiResponse.returnError(
+            ApiResponse.badRequest(
               "Nenhum dado atualizado, verifique os filtros e tente novamente."
             )
           );
@@ -144,7 +130,7 @@ class ClientController {
         res
           .status(400)
           .json(
-            ApiResponse.returnError(
+            ApiResponse.badRequest(
               "Nenhum dado excluido, verifique os filtros e tente novamente"
             )
           );
@@ -201,47 +187,70 @@ class ClientController {
       const token = req.body.token;
       const pass = req.body.password;
       if (!Validators.checkField(token)) {
-        return res.status(406).json(ApiResponse.parameterNotFound('(token)'))
+        return res.status(406).json(ApiResponse.parameterNotFound("(token)"));
       } else if (!Validators.checkField(pass)) {
-        return res.status(406).json(ApiResponse.parameterNotFound('(password)'))
+        return res
+          .status(406)
+          .json(ApiResponse.parameterNotFound("(password)"));
       } else {
         const hashPass = new PassGenerator(pass).build();
-        const client = await Clients.findOne({passwordResetToken: token});
+        const client = await Clients.findOne({ passwordResetToken: token });
         if (!client) {
-          return res.status(400).json(ApiResponse.returnError({message: 'Cliente não localizado, ou token inválido, solicite a recuperação de senha novamente.'}));
+          return res.status(400).json(
+            ApiResponse.badRequest({
+              message:
+                "Cliente não localizado, ou token inválido, solicite a recuperação de senha novamente.",
+            })
+          );
         } else {
           const now = new Date();
           if (now > client.passwordResetExpires) {
-            return res.status(400).json(ApiResponse.returnError({message: 'Token expirado, solicite a recuperação de senha novamente.'}))
+            return res.status(400).json(
+              ApiResponse.badRequest({
+                message:
+                  "Token expirado, solicite a recuperação de senha novamente.",
+              })
+            );
           } else {
-            Clients.findOneAndUpdate({passwordResetToken: token}, {"$set": {
-              password: hashPass
-            }, "$unset": {passwordResetExpires: "", passwordResetToken: ""}}, (err) => {
-              if (err) {
-                return res.status(500).json(ApiResponse.dbError(err));
-              } else {
-                return res.status(200).json(ApiResponse.returnSucess());
+            Clients.findOneAndUpdate(
+              { passwordResetToken: token },
+              {
+                $set: {
+                  password: hashPass,
+                },
+                $unset: { passwordResetExpires: "", passwordResetToken: "" },
+              },
+              (err) => {
+                if (err) {
+                  return res.status(500).json(ApiResponse.dbError(err));
+                } else {
+                  return res.status(200).json(ApiResponse.returnSucess());
+                }
               }
-            });
+            );
           }
         }
       }
     } catch (e) {
-      return res.status(500).json(ApiResponse.dbError(e))
+      return res.status(500).json(ApiResponse.dbError(e));
     }
   }
 
   static async forgotPassword(req, res) {
     try {
-      const {email} = req.body;
+      const { email } = req.body;
       if (!Validators.checkField(email)) {
         return res.status(406).json(ApiResponse.parameterNotFound("(email)"));
       } else {
         const cli = await Clients.findOne({ email: email });
         if (!cli) {
-          return res.status(400).json(ApiResponse.returnError({message: "Email não localizado, verifique se o email esta correto e tente novamente."}));
+          return res.status(400).json(
+            ApiResponse.badRequest({
+              message:
+                "Email não localizado, verifique se o email esta correto e tente novamente.",
+            })
+          );
         } else {
-          
           const token = TokenGenerator.getToken();
 
           const now = new Date();
@@ -249,30 +258,34 @@ class ClientController {
           now.setHours(now.getHours() + 1);
 
           await Clients.findByIdAndUpdate(cli.id, {
-            "$set": {
+            $set: {
               passwordResetToken: token,
               passwordResetExpires: now,
-            }
+            },
           });
           const email = new Mail();
-          email.transporter().sendMail(Mail.mailer({
-            to: cli.email,
-            subject: 'Recuperação de senha',
-            body: passwordRecoverTemplate({token: token}),
-          }), (err) => {
-            if (err) {
-              return res.status(400).json(ApiResponse.unknownError({error: err}))
-            } else {
-              return res.status(200).json(ApiResponse.returnSucess());
+          email.transporter().sendMail(
+            Mail.mailer({
+              to: cli.email,
+              subject: "Recuperação de senha",
+              body: passwordRecoverTemplate({ token: token }),
+            }),
+            (err) => {
+              if (err) {
+                return res
+                  .status(400)
+                  .json(ApiResponse.unknownError({ error: err }));
+              } else {
+                return res.status(200).json(ApiResponse.returnSucess());
+              }
             }
-          })
-
+          );
         }
       }
     } catch (e) {
-      return res.status(500).json(ApiResponse.returnError({message: e}));
+      return res.status(500).json(ApiResponse.badRequest({ message: e }));
     }
-  };
+  }
 }
 
 export default ClientController;

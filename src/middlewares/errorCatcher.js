@@ -1,3 +1,4 @@
+import NotFoundError from '../controllers/errors/NotFoundError.js';
 import ApiResponse from '../models/ApiResponse.js';
 import Jwt from "jsonwebtoken";
 
@@ -5,11 +6,17 @@ import Jwt from "jsonwebtoken";
 function errorCatcher(err, req, res, next) {
     console.error(err);
     if (err instanceof Jwt.JsonWebTokenError) {
-        ApiResponse.unauthorized().sendResponse(res, 401);
-    } else {
-        res.status(400).json(ApiResponse.returnError());    
+        if (err.name === 'TokenExpiredError') {
+            ApiResponse.tokenExpired().sendResponse(res);
+        }
+        if (err instanceof Jwt.JsonWebTokenError) {
+            ApiResponse.unauthorized().sendResponse(res);
+        }
+    } else if (err instanceof NotFoundError) {
+        err.sendResponse(res);
+    } else {    
+        ApiResponse.dbError(err).sendResponse(res);
     }
-    ApiResponse.dbError(err).sendResponse(res, 500);
 }
 
 export default errorCatcher;
