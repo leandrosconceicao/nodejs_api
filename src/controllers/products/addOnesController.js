@@ -1,7 +1,6 @@
 import AddOnes from "../../models/AddOnes.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
-import Jwt from "jsonwebtoken";
 import Validators from "../../utils/utils.js";
 
 class AddOneController {
@@ -20,7 +19,7 @@ class AddOneController {
     }
   };
 
-  static add = (req, res) => {
+  static add = (req, res, next) => {
     try {
       TokenGenerator.verify(req.headers.authorization);
       let addOne = new AddOnes(req.body);
@@ -32,15 +31,11 @@ class AddOneController {
         }
       });
     } catch (e) {
-      if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        res.status(400).json(ApiResponse.returnError());
-      }
+      next(e);
     }
   };
 
-  static update = (req, res) => {
+  static update = (req, res, next) => {
     try {
       TokenGenerator.verify(req.headers.authorization);
       let id = req.body.id;
@@ -58,15 +53,11 @@ class AddOneController {
         res.status(406).json(ApiResponse.parameterNotFound(''))
       }
     } catch (e) {
-      if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        res.status(400).json(ApiResponse.returnError());
-      }
+      next(e);
     }
   };
 
-  static delete = (req, res) => {
+  static delete = (req, res, next) => {
     try {
       TokenGenerator.verify(req.headers.authorization);
       let addOne = req.body;
@@ -86,15 +77,11 @@ class AddOneController {
         res.status(406).json(ApiResponse.parameterNotFound('(id)'))
       }
     } catch (e) {
-      if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        res.status(400).json(ApiResponse.returnError());
-      }
+      next(e);
     }
   };
 
-  static patch = (req, res) => {
+  static patch = (req, res, next) => {
     try {
       TokenGenerator.verify(req.headers.authorization);
       let body = req.body;
@@ -124,11 +111,7 @@ class AddOneController {
         }
       }
     } catch (e) {
-      if (e instanceof Jwt.JsonWebTokenError) {
-        res.status(401).json(ApiResponse.unauthorized());
-      } else {
-        res.status(400).json(ApiResponse.returnError());
-      }
+      next(e);
     }
   }
 }

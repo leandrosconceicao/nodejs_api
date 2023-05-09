@@ -4,22 +4,21 @@ import ApiResponse from "../../models/ApiResponse.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
 
 class OrdersController {
-  static findOne = (req, res) => {
-    let id = req.params.id;
-    if (Validators.checkField(id)) {
-      Orders.findById(id, (err, order) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res
-            .status(200)
-            .json(ApiResponse.returnSucess(order != null ? [order] : []));
-        }
-      });
+  static async findOne(req, res, next) {
+    try {
+      let id = req.params.id;
+      const query = await Orders.findById(id);
+      if (!query) {
+        return res.status(400).json(ApiResponse.badRequest());
+      } else {
+        return res.status(200).json(ApiResponse.returnSucess(query != null ? [query] : []));
+      }
+    } catch (e) {
+      next(e);
     }
   }
 
-  static async findAll(req, res) {
+  static async findAll(req, res, next) {
     try {
       let query = req.query;
       let sort = {}
@@ -70,16 +69,16 @@ class OrdersController {
       }
       let orders = await Orders.find(or).sort(sort);
       if (!orders) {
-        return res.status(400).json(ApiResponse.dbError());
+        return res.status(400).json(ApiResponse.badRequest());
       } else {
         return res.status(200).json(ApiResponse.returnSucess(orders));
       }
     } catch (e) {
-      return res.status(500).json(ApiResponse.dbError(e));
+      return next(e);
     }
   }
 
-  static async post(req, res) {
+  static async post(req, res, next) {
     try { 
       let body = req.body;
       if (!Validators.checkField(body.storeCode)) {
@@ -102,11 +101,11 @@ class OrdersController {
         }
       }
     } catch (e) {
-      res.status(500).json(ApiResponse.dbError(e));
+      next(e)
     }
   }
 
-  static async pushNewItems(req, res) {
+  static async pushNewItems(req, res, next) {
     try {
       let body = req.body;
       if (!Validators.checkField(body.id)) {
@@ -124,11 +123,11 @@ class OrdersController {
         return res.status(200).json(ApiResponse.returnSucess(order));
       }
     } catch (e) {
-      return res.status(500).json(ApiResponse.dbError(e));
+      return next(e)
     }
   }
 
-  static async update(req, res) {
+  static async update(req, res, next) {
     try {
       let query = req.body.query
       let data = req.body.data;
@@ -145,7 +144,7 @@ class OrdersController {
         }
       }
     } catch (e) {
-      return res.status(500).json(ApiResponse.dbError(e));
+      return next(e)
     }
   }
 }

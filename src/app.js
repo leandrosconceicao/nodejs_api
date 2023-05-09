@@ -13,8 +13,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
-app.use(errorCatcher)
 
 router(app);
+
+app.use(errorCatcher)
 
 export default app;
