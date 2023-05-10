@@ -2,14 +2,18 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
   _id: { type: Number },
-  isActive: { type: Boolean, required: true },
+  isActive: { type: Boolean, 
+    required: [true, "Parametro (isActive) é obrigatório"] 
+  },
   categoria: { type: String },
   categoryId: { type: Number },
   preco: { type: Number },
-  produto: { type: String, required: true },
+  produto: { type: String, 
+    required: [true, "Parametro (produto) é obrigatório"],
+  },
   descricao: { type: String },
   preparacao: Boolean,
-  storeCode: { type: String, required: true },
+  storeCode: { type: String, required: [true, "Parametro (storeCode) é obrigatório"] },
   addOnes: {
     type: [
       {

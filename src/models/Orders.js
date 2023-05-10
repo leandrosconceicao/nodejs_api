@@ -7,7 +7,12 @@ const ordersSchema = new mongoose.Schema({
   tableId: { type: String },
   date: { type: Date , default: new Date()},
   orderType: { type: String,
-    default: 'frontDesk', enum: ['frontDesk', 'account', 'delivery']},
+    default: 'frontDesk',
+    enum: {
+      values: ['frontDesk', 'account', 'delivery'],
+      message: "O tipo {VALUE} não é um valor permitido"
+    }
+  },
   accepted: { type: Boolean },
   lastModified: {
     date: {type: Date},
@@ -17,7 +22,10 @@ const ordersSchema = new mongoose.Schema({
   status: {
     type: "String",
     default: "pending",
-    enum: ['pending', 'cancelled', 'finished', 'onTheWay']
+    enum: {
+      values: ['pending', 'cancelled', 'finished', 'onTheWay'],
+      message: "o status {VALUE} não é um valor permitido"
+    }
   },
   products: {
     type: [
