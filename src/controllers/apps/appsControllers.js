@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import ApiResponse from '../../models/ApiResponse.js';
 import Apps from '../../models/Apps.js';
 import Validators from '../../utils/utils.js';
@@ -5,7 +6,7 @@ import Validators from '../../utils/utils.js';
 
 class AppsController {
     
-    static async findAll(req, res) {
+    static async findAll(req, res, next) {
         try {
             let body = req.query;
             let query = {};
@@ -19,50 +20,38 @@ class AppsController {
             const data = await Apps.find(query);
             return res.status(200).json(ApiResponse.returnSucess(data));
         } catch (e) {
-            return res.status(500).json(ApiResponse.dbError(e));
+            next(e);
         }
     }
 
-    static async findOne(req, res) {
+    static async findOne(req, res, next) {
         try {
             let id = req.params.id;
-            if (!Validators.checkField(id)) {
-                return res.status(406).json(ApiResponse.parameterNotFound('(id)'));
-            }
             const data = await Apps.findById(id);
             return res.status(200).json(ApiResponse.returnSucess(data));
         } catch (e) {
-            return res.status(500).json(ApiResponse.dbError(e));
+            next(e);
         }
     }
 
-    static async add(req, res) {
+    static async add(req, res, next) {
         try {
             let body = req.body;
-            if (!Validators.checkField(body.name)) {
-                return res.status(406).json(ApiResponse.parameterNotFound('(name)'));
-            } else if (!Validators.checkField(body.releaseDate)) {
-                return res.status(406).json(ApiResponse.parameterNotFound('(releaseDate)'));
-            } else if (!Validators.checkField(body.version)) {
-                return res.status(406).json(ApiResponse.parameterNotFound('(version)'))
-            } else {
-                const app = new Apps(body);
-                const proccess = await app.save();
-                if (!proccess) {
-                    return res.status(500).json(ApiResponse.dbError(proccess));
-                } else {
-                    return res.status(200).json(ApiResponse.returnSucess());
-                }
-            }
+            const app = new Apps(body);
+            await app.save();
+            return ApiResponse.returnSucess().sendResponse(res);
         } catch (e) {
-            return res.status(500).json(ApiResponse.dbError(e));
+            next(e);
         }
     }
 
-    static async update(req, res) {
+    static async update(req, res, next) {
         try {
             let id = req.body.id;
             let data = req.body.data;
+            if (!id) {
+                throw new mongoose.Error.ValidationError();
+            }
             const dt = await Apps.findByIdAndUpdate(id, {$set: data});
             if (!dt) {
                 return res.status(400).json(ApiResponse.returnError("Nenhum dado atualizado"));
@@ -70,11 +59,11 @@ class AppsController {
                 return res.status(200).json(ApiResponse.returnSucess());
             }
         } catch (e) {
-            return res.status(500).json(ApiResponse.dbError(e));
+            next(e);
         }
     }
 
-    static async delete(req, res) {
+    static async delete(req, res, next) {
         try {
             let id = req.body.id;
             if (!Validators.checkField(id)) {
@@ -82,13 +71,13 @@ class AppsController {
             } else {
                 const r = Apps.findByIdAndDelete(id);
                 if (!r) {
-                    return res.status(400).json(ApiResponse.returnError("Nenhum dado excluido, verifique os filtros e tente novamente."))
+                    return res.status(400).json(ApiResponse.returnError("Nenhum dado excluido, verifique os filtros e tente novamente."));
                 } else {
                     return res.status(200).json(ApiResponse.returnSucess());
                 }
             }
         } catch (e) {   
-            return res.status(500).json(ApiResponse.dbError(e));
+            next(e);
         }
     }
 }
