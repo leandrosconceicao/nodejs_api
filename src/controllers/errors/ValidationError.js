@@ -2,7 +2,7 @@ import ApiResponse from "../../models/ApiResponse.js";
 
 class ValidationError extends ApiResponse {
   constructor(erro) {
-    const msg = Object.values(erro.errors).map(err => erro.message).join("; ");
+    const msg = Object.values(erro.errors).map(err => err.message).join("; ");
     super({
       statusProcess: false,
       message: `Os seguintes erros foram encontrados: ${msg}`,
