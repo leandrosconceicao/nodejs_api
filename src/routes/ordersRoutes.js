@@ -7,7 +7,7 @@ const router = express.Router();
 
 router
     .get(Endpoints.orders, OrdersController.findAll)
-    .get(`${Endpoints.orders}/:id`, OrdersController.findOne)
+    .get(`${Endpoints.orders}/:pedidosId`, OrdersController.findOne)
     .post(Endpoints.orders, OrdersController.post)
     .put(Endpoints.orders, validateToken, OrdersController.update)
     .put(`${Endpoints.orders}/items`, validateToken, OrdersController.pushNewItems)
