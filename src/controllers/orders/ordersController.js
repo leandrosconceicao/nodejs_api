@@ -21,11 +21,28 @@ class OrdersController {
 
   static async findAll(req, res, next) {
     try {
-      let query = req.query;
+      const {limit = 10, page = 1, orderby, ordenation} = req.headers;
+      const query = req.query;
+      // const {
+      //   isPreparation, 
+      //   type, 
+      //   from, 
+      //   to, 
+      //   id, 
+      //   isTableOrders, 
+      //   clientId,
+      //   idTable,
+      //   excludeStatus,
+      //   status,
+      //   accountStatus,
+      //   saller,
+      //   accepted,
+      //   storeCode
+      // } = req.query;
       let sort = {}
       let or = {}
-      if (Validators.checkField(req.headers.orderby) && Validators.checkField(req.headers.ordenation)) {
-        sort[`${req.headers.orderby}`] = req.headers.ordenation;
+      if (Validators.checkField(orderby) && Validators.checkField(ordenation)) {
+        sort[`${orderby}`] = ordenation;
       }
       if (Validators.checkField(query.isPreparation)) {
         or.products = {$elemMatch: {"setupIsFinished": false, "needsPreparation": true}}
@@ -68,7 +85,10 @@ class OrdersController {
       if (Validators.checkField(query.storeCode)) {
         or.storeCode = query.storeCode;
       }
-      let orders = await Orders.find(or).sort(sort);
+      let orders = await Orders.find(or)
+        .skip((page - 1) * limit )
+        .limit(limit)
+        .sort(sort);
       if (!orders) {
         ApiResponse.badRequest().sendResponse(res);
       } else {
