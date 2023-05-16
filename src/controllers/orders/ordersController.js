@@ -22,72 +22,74 @@ class OrdersController {
   static async findAll(req, res, next) {
     try {
       const {limit = 10, page = 1, orderby, ordenation} = req.headers;
-      const query = req.query;
-      // const {
-      //   isPreparation, 
-      //   type, 
-      //   from, 
-      //   to, 
-      //   id, 
-      //   isTableOrders, 
-      //   clientId,
-      //   idTable,
-      //   excludeStatus,
-      //   status,
-      //   accountStatus,
-      //   saller,
-      //   accepted,
-      //   storeCode
-      // } = req.query;
+      // const query = req.query;
+      const {
+        isPreparation, 
+        type, 
+        from, 
+        to, 
+        id, 
+        isTableOrders, 
+        clientId,
+        idTable,
+        excludeStatus,
+        status,
+        accountStatus,
+        saller,
+        accepted,
+        storeCode
+      } = req.query;
+      let _limit = parseInt(limit);
+      let _page = parseInt(page);
       let sort = {}
       let or = {}
       if (Validators.checkField(orderby) && Validators.checkField(ordenation)) {
         sort[`${orderby}`] = ordenation;
       }
-      if (Validators.checkField(query.isPreparation)) {
+      if (Validators.checkField(isPreparation)) {
         or.products = {$elemMatch: {"setupIsFinished": false, "needsPreparation": true}}
       }
-      if (Validators.checkField(query.type)) {
-        or.orderType = query.type;
+      if (Validators.checkField(type)) {
+        or.orderType = type;
       }
-      if (Validators.checkField(query.from) && Validators.checkField(query.to)) {
-        or.date = {$gte: new Date(query.from), $lte: new Date(query.to)}
+      if (Validators.checkField(from) && Validators.checkField(to)) {
+        or.date = {$gte: new Date(from), $lte: new Date(to)}
       }
-      if (Validators.checkField(query.id)) {
-        or._id = query.id;
+      if (Validators.checkField(id)) {
+        or._id = id;
       }
-      if (Validators.checkField(query.isTableOrders)) {
-        if (query.isTableOrders) {
+      if (Validators.checkField(isTableOrders)) {
+        if (isTableOrders) {
           or.tableId = { $ne: "" }
         }
       }
-      if (Validators.checkField(query.clientId)) {
-        or["client._id"] = query.clientId;
+      if (Validators.checkField(clientId)) {
+        or["client._id"] = clientId;
       }
-      if (Validators.checkField(query.idTable)) {
-        or.tableId = query.idTable;
+      if (Validators.checkField(idTable)) {
+        or.tableId = idTable;
       }
       if (
-        Validators.checkField(query.excludeStatus) &&
-        Validators.checkField(query.status)
+        Validators.checkField(excludeStatus) &&
+        Validators.checkField(status)
       ) {
-        or.accountStatus = { $nin: [query.status, "Fechada"] }
+        or.accountStatus = { $nin: [status, "Fechada"] }
       }
-      if (Validators.checkField(query.accountStatus)) {
-        or.accountStatus = query.accountStatus;
+      if (Validators.checkField(accountStatus)) {
+        or.accountStatus = accountStatus;
       }
-      if (Validators.checkField(query.saller)) {
-        or.saller = query.saller;
+      if (Validators.checkField(saller)) {
+        or.saller = saller;
       }
-      if (Validators.checkField(query.accepted)) {
-        or.accepted = query.accepted;
+      if (Validators.checkField(accepted)) {
+        or.accepted = accepted;
       }
-      if (Validators.checkField(query.storeCode)) {
-        or.storeCode = query.storeCode;
+      if (Validators.checkField(storeCode)) {
+        or.storeCode = storeCode;
       }
       let orders = await Orders.find(or)
-        .skip((page - 1) * limit )
-        .limit(limit)
+        .skip((_page - 1) * _limit )
+        .limit(_limit)
         .sort(sort);
       if (!orders) {
         ApiResponse.badRequest().sendResponse(res);
