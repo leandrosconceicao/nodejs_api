@@ -1,84 +1,90 @@
 import Products from '../../models/Product.js';
 import ApiResponse from "../../models/ApiResponse.js";
 import Validators from "../../utils/utils.js";
+import NotFoundError from '../errors/NotFoundError.js';
+import Headers from '../base/Headers.js';
 
 class ProductController {
 
-  static findOne = (req, res) => {
-    let id = req.params.id;
-    if (Validators.checkField(id)) {
-      Products.findById(id, (err, prod) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(200).json(ApiResponse.returnSucess(prod != null ? [prod] : []));
-        }
-      })
+  static findOne = async (req, res, next) => {
+    try {
+      let id = req.params.id;
+      const prod = await Products.findById(id)
+      if (!prod) {
+        throw new NotFoundError("Produto não localizado");
+      }
+      return ApiResponse.returnSucess(prod).sendResponse(res);
+    } catch (e) {
+      next(e);
     }
   }
 
-  static findAll = (req, res) => {
-    let query = req.query;
-    let prod = {};
-    if (Validators.checkField(query.id)) {
-        prod._id = query.id;
-    } else if (Validators.checkField(query.nome)) {
-        prod.nome = query.nome;
-    } else if (Validators.checkField(query.storeCode)) {
-        prod.storeCode = query.storeCode;
-    }
-    Products.find(prod, (err, prod) => {
-      if (err) {
-        res.status(500).json(ApiResponse.dbError(err));
-      } else {
-        res.status(200).json(ApiResponse.returnSucess(prod));
+  static findAll = async (req, res, next) => {
+    try {
+      // let {limit = 50, page = 1} = req.headers;
+      const config = new Headers(req.headers);
+      let {id, nome, storeCode} = req.query;
+      let prod = {};
+      if (Validators.checkField(id)) {
+          prod._id = id;
+      } else if (Validators.checkField(nome)) {
+          prod.produto = new RegExp(nome, "i");
+      } else if (Validators.checkField(storeCode)) {
+          prod.storeCode = storeCode;
       }
-    });
-  };
-
-  static addProduct = (req, res) => {
-    let product = new Products(req.body);
-    product.save((err) => {
-      if (err) {
-        res.status(500).send(ApiResponse.returnError());
-      } else {
-        res.status(201).json(ApiResponse.returnSucess());
-      }
-    });
-  };
-
-  static update = (req, res) => {
-    let id = req.body.id;
-    let data = req.body.data;
-    Products.findByIdAndUpdate(id, { $set: data }, (err) => {
-      if (err) {
-        res.status(500).send(ApiResponse.dbError(err));
-      } else {
-        res.status(200).json(ApiResponse.returnSucess());
-      }
-    });
-  };
-
-  static deleteProduct = (req, res) => {
-    let query = req.body;
-    if (!query.id) {
-      res.status(400).json(ApiResponse.parameterNotFound())
-    } else {
-      Products.findByIdAndDelete(query.id, (err) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(200).json(ApiResponse.returnSucess());
-        }
-      });
+      // let _limit = parseInt(limit);
+      // let _page = parseInt(page);
+      // let _skip = (_page - 1) * _limit;
+      const q = await Products.find(prod)
+        .skip(config.getPagination().pagination)
+        .limit(config.getPagination().limit);
+      return ApiResponse.returnSucess(q).sendResponse(res);
+    } catch (e) {
+      next(e);
     }
   };
 
-  static async deleteImage(req, res) {
+  static addProduct = async (req, res, next) => {
+    try {
+      let product = new Products(req.body);
+      await product.save();
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static update = async (req, res, next) => {
+    try {
+        let id = req.body.id;
+      let data = req.body.data;
+      await Products.findByIdAndUpdate(id, { $set: data });
+      ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static deleteProduct = async (req, res, next) => {
+    try {
+      let query = req.body;
+      if (!query.id) {
+        ApiResponse.parameterNotFound("id").sendResponse(res);
+      }
+      await Products.findByIdAndDelete(query.id);
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  static async deleteImage(req, res, next) {
     try {
       let image = req.query.name;
-      if (image) {
-        let db = await Products.updateMany(
+      if (!image) {
+        return ApiResponse.parameterNotFound("name").sendResponse(res);
+      } else {
+        await Products.updateMany(
           {
             image: {
               name: image,
@@ -86,16 +92,10 @@ class ProductController {
           },
           { $unset: { image: "" } }
         );
-        if (db.modifiedCount > 0) {
-            res.status(200).json(ApiResponse.returnSucess())
-        } else {
-            res.status(400).json(ApiResponse.badRequest('Nenhum dado atualizado, verifique os filtros.'))
-        }
-      } else {
-        res.status(400).json(ApiResponse.parameterNotFound());
+        return ApiResponse.returnSucess().sendResponse(res);
       }
     } catch (e) {
-      res.status(500).json(ApiResponse.dbError());
+      next(e);
     }
   }
 }
