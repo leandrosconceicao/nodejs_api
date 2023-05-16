@@ -41,7 +41,7 @@ class ApiResponse extends Error {
 
   static parameterNotFound(message) {
     return new ApiResponse({
-      message: `Parametro obrigatório é inválido ou não foi informado ${message}`,
+      message: `Parametro obrigatório é inválido ou não foi informado (${message})`,
       status: 406,
     });
   }
