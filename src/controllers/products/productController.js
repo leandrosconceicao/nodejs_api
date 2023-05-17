@@ -21,8 +21,7 @@ class ProductController {
 
   static findAll = async (req, res, next) => {
     try {
-      // let {limit = 50, page = 1} = req.headers;
-      const config = new Headers(req.headers);
+      // const config = new Headers(req.headers).getPagination();
       let {id, nome, storeCode} = req.query;
       let prod = {};
       if (Validators.checkField(id)) {
@@ -32,13 +31,8 @@ class ProductController {
       } else if (Validators.checkField(storeCode)) {
           prod.storeCode = storeCode;
       }
-      // let _limit = parseInt(limit);
-      // let _page = parseInt(page);
-      // let _skip = (_page - 1) * _limit;
-      const q = await Products.find(prod)
-        .skip(config.getPagination().pagination)
-        .limit(config.getPagination().limit);
-      return ApiResponse.returnSucess(q).sendResponse(res);
+      req.query = Products.find(prod);
+      next();
     } catch (e) {
       next(e);
     }
