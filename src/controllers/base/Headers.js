@@ -1,8 +1,13 @@
 class Headers {
-    constructor(headers, defaultLimit=50, defaultPage=1) {
+    constructor(headers) {
         this.headers = headers;
-        this.defaultLimit = defaultLimit,
-        this.defaultPage = defaultPage
+    }
+
+    getOrderBy() {
+        return {
+            orderBy: this.headers.orderby,
+            ordenation: this.headers.ordenation,
+        }
     }
 
     getPagination() {
@@ -10,8 +15,8 @@ class Headers {
         let page = parseInt(this.headers.page);
         let config = (page - 1) * limit ;
         return {
-            pagination: config > 0 ? config : this.defaultPage,
-            limit: limit > 0 ? limit : this.defaultLimit
+            pagination: config > 0 ? config : 1,
+            limit: limit > 0 ? limit : 50
         }
     }
 }
