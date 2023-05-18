@@ -15,7 +15,7 @@ class Headers {
         let page = parseInt(this.headers.page);
         let config = (page - 1) * limit ;
         return {
-            pagination: config > 0 ? config : 1,
+            pagination: config > 0 ? config : 0,
             limit: limit > 0 ? limit : 50
         }
     }

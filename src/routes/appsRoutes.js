@@ -10,6 +10,6 @@ router
     .get(`${Endpoints.apps}/:id`, validateToken, AppsController.findOne)
     .post(Endpoints.apps, validateToken, AppsController.add)
     .put(Endpoints.apps, validateToken, AppsController.update)
-    .delete(Endpoints.apps, AppsController.delete)
+    .delete(Endpoints.apps, validateToken, AppsController.delete)
 
 export default router;

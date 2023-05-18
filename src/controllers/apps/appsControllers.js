@@ -11,11 +11,11 @@ class AppsController {
             let body = req.query;
             let query = {};
             if (Validators.checkField(body.id)) {
-                query['_id'] = body.id;
+                query._id = body.id;
             } else if (Validators.checkField(body.name)) {
-                query['appsName'] = body.name;
+                query.appsName = body.name;
             } else if (Validators.checkField(body.version)) {
-                query['version'] = body.version;
+                query.version = body.version;
             }
             const data = await Apps.find(query);
             return res.status(200).json(ApiResponse.returnSucess(data));
