@@ -1,8 +1,8 @@
 import Products from '../../models/Product.js';
 import ApiResponse from "../../models/ApiResponse.js";
 import Validators from "../../utils/utils.js";
+import RegexBuilder from "../../utils/regexBuilder.js";
 import NotFoundError from '../errors/NotFoundError.js';
-import Headers from '../base/Headers.js';
 
 class ProductController {
 
@@ -10,6 +10,8 @@ class ProductController {
     try {
       let id = req.params.id;
       const prod = await Products.findById(id)
+        .populate("categoryId")
+        .exec();
       if (!prod) {
         throw new NotFoundError("Produto não localizado");
       }
@@ -21,17 +23,16 @@ class ProductController {
 
   static findAll = async (req, res, next) => {
     try {
-      // const config = new Headers(req.headers).getPagination();
       let {id, nome, storeCode} = req.query;
       let prod = {};
       if (Validators.checkField(id)) {
           prod._id = id;
       } else if (Validators.checkField(nome)) {
-          prod.produto = new RegExp(nome, "i");
+          prod.produto = RegexBuilder.searchByName(nome);
       } else if (Validators.checkField(storeCode)) {
           prod.storeCode = storeCode;
       }
-      req.query = Products.find(prod);
+      req.query = Products.find(prod).populate("categoryId")
       next();
     } catch (e) {
       next(e);
