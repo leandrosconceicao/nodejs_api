@@ -6,7 +6,9 @@ const productSchema = new mongoose.Schema({
     required: [true, "Parametro (isActive) é obrigatório"] 
   },
   categoria: { type: String },
-  categoryId: { type: Number },
+  categoryId: {
+    type: mongoose.Schema.Types.Number, ref: "categorias", required: true
+  },
   preco: { type: Number },
   produto: { type: String, 
     required: [true, "Parametro (produto) é obrigatório"],
