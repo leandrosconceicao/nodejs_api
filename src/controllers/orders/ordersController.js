@@ -1,13 +1,13 @@
 import Validators from "../../utils/utils.js";
 import Orders from "../../models/Orders.js";
 import ApiResponse from "../../models/ApiResponse.js";
-import TokenGenerator from "../../utils/tokenGenerator.js";
+// import TokenGenerator from "../../utils/tokenGenerator.js";
 import NotFoundError from "../errors/NotFoundError.js";
 
 class OrdersController {
   static async findOne(req, res, next) {
     try {
-      let id = req.params.id;
+      let id = req.params.pedidosId;
       const query = await Orders.findById(id);
       if (!query) {
         next(new NotFoundError('Pedido não encontrado'));
@@ -21,8 +21,6 @@ class OrdersController {
 
   static async findAll(req, res, next) {
     try {
-      const {limit = 10, page = 1, orderby, ordenation} = req.headers;
-      // const query = req.query;
       const {
         isPreparation, 
         type, 
@@ -32,20 +30,13 @@ class OrdersController {
         isTableOrders, 
         clientId,
         idTable,
-        excludeStatus,
         status,
         accountStatus,
         saller,
         accepted,
         storeCode
       } = req.query;
-      let _limit = parseInt(limit);
-      let _page = parseInt(page);
-      let sort = {}
       let or = {}
-      if (Validators.checkField(orderby) && Validators.checkField(ordenation)) {
-        sort[`${orderby}`] = ordenation;
-      }
       if (Validators.checkField(isPreparation)) {
         or.products = {$elemMatch: {"setupIsFinished": false, "needsPreparation": true}}
       }
@@ -64,17 +55,17 @@ class OrdersController {
         }
       }
       if (Validators.checkField(clientId)) {
-        or["client._id"] = clientId;
+        or.client._id = clientId;
       }
       if (Validators.checkField(idTable)) {
         or.tableId = idTable;
       }
-      if (
-        Validators.checkField(excludeStatus) &&
-        Validators.checkField(status)
-      ) {
-        or.accountStatus = { $nin: [status, "Fechada"] }
-      }
+      // if (
+      //   Validators.checkField(excludeStatus) &&
+      //   Validators.checkField(status)
+      // ) {
+      //   or.accountStatus = { $nin: [status, "Fechada"] }
+      // }
       if (Validators.checkField(accountStatus)) {
         or.accountStatus = accountStatus;
       }
@@ -87,15 +78,16 @@ class OrdersController {
       if (Validators.checkField(storeCode)) {
         or.storeCode = storeCode;
       }
-      let orders = await Orders.find(or)
-        .skip((_page - 1) * _limit )
-        .limit(_limit)
-        .sort(sort);
-      if (!orders) {
-        ApiResponse.badRequest().sendResponse(res);
-      } else {
-        ApiResponse.returnSucess(orders).sendResponse(res);
+      if (Validators.checkField(status)) {
+        or.status = status;
       }
+      req.query = Orders.find(or)
+      next();
+      // if (!orders) {
+      //   ApiResponse.badRequest().sendResponse(res);
+      // } else {
+      //   ApiResponse.returnSucess(orders).sendResponse(res);
+      // }
     } catch (e) {
       return next(e);
     }
@@ -108,7 +100,7 @@ class OrdersController {
         res.status(406).json(ApiResponse.parameterNotFound("(storeCode)"));
       } else {
         let order = new Orders(body);
-        order._id = TokenGenerator.generateId();
+        // order._id = TokenGenerator.generateId();
         order.date = Date.now();
         order.payment.data = Date.now();
         let or = await order.save();
