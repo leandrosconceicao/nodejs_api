@@ -17,8 +17,8 @@ class AppsController {
             } else if (Validators.checkField(body.version)) {
                 query.version = body.version;
             }
-            const data = await Apps.find(query);
-            return res.status(200).json(ApiResponse.returnSucess(data));
+            req.query = Apps.find(query);
+            next();
         } catch (e) {
             next(e);
         }
@@ -28,7 +28,7 @@ class AppsController {
         try {
             let id = req.params.id;
             const data = await Apps.findById(id);
-            return res.status(200).json(ApiResponse.returnSucess(data));
+            return ApiResponse.returnSucess(data).sendResponse(res);
         } catch (e) {
             next(e);
         }
@@ -67,13 +67,13 @@ class AppsController {
         try {
             let id = req.body.id;
             if (!Validators.checkField(id)) {
-                return res.status(406).json(ApiResponse.parameterNotFound('(id)'));
+                return ApiResponse.parameterNotFound('id').sendResponse(res);
             } else {
-                const r = Apps.findByIdAndDelete(id);
+                const r = await Apps.findByIdAndDelete(id);
                 if (!r) {
-                    return res.status(400).json(ApiResponse.returnError("Nenhum dado excluido, verifique os filtros e tente novamente."));
+                    return ApiResponse.badRequest().sendResponse(res);
                 } else {
-                    return res.status(200).json(ApiResponse.returnSucess());
+                    return ApiResponse.returnSucess().sendResponse(res);
                 }
             }
         } catch (e) {   
