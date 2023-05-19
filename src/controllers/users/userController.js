@@ -57,21 +57,25 @@ class UserController {
     try {
       let body = req.body;
       if (!Validators.checkField(body.email)) {
-        return ApiResponse.parameterNotFound('(email)').sendResponse(res);
+        return ApiResponse.parameterNotFound('email').sendResponse(res);
       }
       if (!Validators.checkField(body.password)) {
-        return ApiResponse.parameterNotFound('(password)').sendResponse(res);
+        return ApiResponse.parameterNotFound('password').sendResponse(res);
       }
       const hashPass = new PassGenerator(body.password).build();
       let users = await Users.findOne({
         _id: body.email,
         pass: hashPass,
-      });
+      }).select({
+        _id: 0,
+        pass: 0
+      })
       if (!users) {
         throw new NotFoundError("Dados incorretos ou inválidos.")
       } else {
         let ests = await Establishments.find({_id: {$in: users.establishments}})
         users.ests = ests;
+        // users.pass = "";
         const token = TokenGenerator.generate(body.email);
         res.set("Authorization", token);
         res.set("Access-Control-Expose-Headers", "*");
