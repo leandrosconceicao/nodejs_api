@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const ordersSchema = new mongoose.Schema({
-  _id: {type: String},
+  _id: {type: mongoose.Types.ObjectId},
   pedidosId: {type: Number},
   tableDescription: { type: String },
   tableId: { type: String },
