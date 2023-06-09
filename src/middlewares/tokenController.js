@@ -1,5 +1,3 @@
-import Jwt from "jsonwebtoken";
-import ApiResponse from "../models/ApiResponse.js";
 import TokenGenerator from "../utils/tokenGenerator.js";
 
 const validateToken = (req, res, next) => {
