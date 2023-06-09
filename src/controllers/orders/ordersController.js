@@ -1,14 +1,14 @@
 import Validators from "../../utils/utils.js";
 import Orders from "../../models/Orders.js";
 import ApiResponse from "../../models/ApiResponse.js";
-// import TokenGenerator from "../../utils/tokenGenerator.js";
+import Counter from "../base/Counters.js";
 import NotFoundError from "../errors/NotFoundError.js";
 
 class OrdersController {
   static async findOne(req, res, next) {
     try {
       let id = req.params.pedidosId;
-      const query = await Orders.findById(id);
+      const query = await Orders.findById(id).populate("client");
       if (!query) {
         next(new NotFoundError('Pedido não encontrado'));
       } else {
@@ -60,12 +60,6 @@ class OrdersController {
       if (Validators.checkField(idTable)) {
         or.tableId = idTable;
       }
-      // if (
-      //   Validators.checkField(excludeStatus) &&
-      //   Validators.checkField(status)
-      // ) {
-      //   or.accountStatus = { $nin: [status, "Fechada"] }
-      // }
       if (Validators.checkField(accountStatus)) {
         or.accountStatus = accountStatus;
       }
@@ -81,13 +75,8 @@ class OrdersController {
       if (Validators.checkField(status)) {
         or.status = status;
       }
-      req.query = Orders.find(or)
+      req.query = Orders.find(or).populate("client");
       next();
-      // if (!orders) {
-      //   ApiResponse.badRequest().sendResponse(res);
-      // } else {
-      //   ApiResponse.returnSucess(orders).sendResponse(res);
-      // }
     } catch (e) {
       return next(e);
     }
@@ -100,24 +89,28 @@ class OrdersController {
         res.status(406).json(ApiResponse.parameterNotFound("(storeCode)"));
       } else {
         let order = new Orders(body);
-        // order._id = TokenGenerator.generateId();
         order.date = Date.now();
         order.payment.data = Date.now();
         let or = await order.save();
-        if (!or) {
-          res.status(400).json(ApiResponse.returnError('Ocorreu um problema para salvar o pedido'));
-        } else {
-          const newOrder = await Orders.findById(or.id);
-          if (!newOrder) {
-            res.status(400).json(ApiResponse.returnError('Houve um problema com a requisição'));
-          } else {
-            res.status(201).json(ApiResponse.returnSucess(newOrder));
-          }
-        }
+        await OrdersController.updateId(or);
+        const newOrder = await Orders.findById(or.id).populate("client");
+        ApiResponse.returnSucess(newOrder).sendResponse(res);
       }
     } catch (e) {
       next(e)
     }
+  }
+
+  static async updateId(order) {
+    let count = 0;
+    let counter = await Counter.find({});
+    if (!counter.length) {
+      count += 1;
+    } else {
+      count = counter[0].seq_value;
+    }
+    await Orders.findByIdAndUpdate(order.id, {"pedidosId": count + 1});
+    await Counter.updateMany({}, {"seq_value": count})
   }
 
   static async pushNewItems(req, res, next) {
@@ -151,7 +144,7 @@ class OrdersController {
       } else if (!Validators.checkField(data)) {
         ApiResponse.parameterNotFound('(data)').sendResponse(res);
       } else {
-        const update = await Orders.updateOne(query, {$set: data})
+        const update = await Orders.updateMany(query, {$set: data})
         if (!update) {
           ApiResponse.returnError('Nenhum dado atualizado, verifique os filtros').sendResponse(res);
         } else {
