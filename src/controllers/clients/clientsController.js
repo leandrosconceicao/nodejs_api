@@ -7,6 +7,7 @@ import clientActivationTemplate from "../email/templates/activateTemplate.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
 import passwordRecoverTemplate from "../email/templates/passwordRecoverTemplate.js";
 import NotFoundError from "../errors/NotFoundError.js";
+import RegexBuilder from "../../utils/regexBuilder.js";
 
 class ClientController {
   static async authentication(req, res, next) {
@@ -37,7 +38,7 @@ class ClientController {
     }
   }
 
-  static async findOne(req, res) {
+  static async findOne(req, res, next) {
     let id = req.params.id;
     if (!Validators.checkField(id)) {
       res.status(406).json(ApiResponse.parameterNotFound("id"));
@@ -50,53 +51,51 @@ class ClientController {
     }
   }
 
-  static async findAll(req, res) {
-    let query = req.query;
-    if (!Validators.checkField(query.name)) {
-      delete query.name;
-    } else if (!Validators.checkField(query.cgc)) {
-      delete query.cgc;
-    } else if (!Validators.checkField(query.email)) {
-      delete query.email;
-    } else if (!Validators.checkField(query.isActive)) {
-      delete query.isActive;
+  static async findAll(req, res, next) {
+    try {
+      let {name, cgc, email, isActive} = req.query;
+      let querySearch = {};
+      if (Validators.checkField(name)) {
+        querySearch.name = RegexBuilder.searchByName(name);
+      } else if (Validators.checkField(cgc)) {
+        querySearch.cgc = cgc;
+      } else if (Validators.checkField(email)) {
+        querySearch.email = email;
+      } else if (Validators.checkField(isActive)) {
+        querySearch.isActive = isActive;
+      }
+      req.query = Clients.find(querySearch);
+      next();
+    } catch (e) {
+      next(e);
     }
-    let client = new Clients(query);
-    const q = await Clients.find(client);
-    if (!q) {
-      ApiResponse.badRequest((message = "Nenhum dado localizado"));
-    }
-    ApiResponse.returnSucess(cli).sendResponse(res);
   }
 
-  static async add(req, res) {
-    let client = new Clients(req.body);
-    client.password = new PassGenerator(client.password).build();
-    client.save((err) => {
-      if (err) {
-        if (err.code === 11000) {
-          res
-            .status(400)
-            .json(ApiResponse.badRequest(`Atenção Usuário já cadastrado.`));
-        } else {
-          res.status(500).json(ApiResponse.dbError(err));
-        }
-      } else {
-        try {
-          Mail.send({
-            to: client.email,
-            subject: "Confirmação de email",
-            body: clientActivationTemplate({
-              id: client.id,
-              name: client.name,
-            }),
-          });
-        } catch (e) {
-        } finally {
-          res.status(200).json(ApiResponse.returnSucess());
+  static async add(req, res, next) {
+    try {
+      let client = new Clients(req.body);
+      client.password = new PassGenerator(client.password).build();
+      let process = await client.save();
+      if (process) {
+        if (!client.isValid) {
+          try {
+            Mail.send({
+              to: client.email,
+              subject: "Confirmação de email",
+              body: clientActivationTemplate({
+                id: client.id,
+                name: client.name,
+              }),
+            });
+          } catch (e) {
+            next(e)
+          }
         }
       }
-    });
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
   }
 
   static async update(req, res) {

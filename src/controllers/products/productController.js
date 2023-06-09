@@ -23,13 +23,15 @@ class ProductController {
 
   static findAll = async (req, res, next) => {
     try {
-      let {id, nome, storeCode} = req.query;
+      let {id, produto, storeCode} = req.query;
       let prod = {};
       if (Validators.checkField(id)) {
           prod._id = id;
-      } else if (Validators.checkField(nome)) {
-          prod.produto = RegexBuilder.searchByName(nome);
-      } else if (Validators.checkField(storeCode)) {
+      } 
+      if (Validators.checkField(produto)) {
+          prod.produto = RegexBuilder.searchByName(produto);
+      } 
+      if (Validators.checkField(storeCode)) {
           prod.storeCode = storeCode;
       }
       req.query = Products.find(prod).populate("categoryId")
