@@ -155,6 +155,22 @@ class OrdersController {
       return next(e)
     }
   }
+
+  static async setPreparation(req, res, next) {
+    try {
+      let query = req.body;
+      if (!Validators.checkField(query.id)) {
+        ApiResponse.parameterNotFound('id').sendResponse(res);
+      }
+      if (!Validators.checkField(query.isReady) && !Validators.checkType(query.isReady, 'boolean')) {
+        ApiResponse.parameterNotFound('isReady').sendResponse(res);
+      }
+      await Orders.findByIdAndUpdate(query.id, {"products.$[].setupIsFinished": query.isReady})
+      ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      return next(e);
+    }
+  }
 }
 
 export default OrdersController;
