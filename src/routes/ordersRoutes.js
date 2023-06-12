@@ -11,6 +11,7 @@ router
     .get(`${Endpoints.orders}/:pedidosId`, OrdersController.findOne)
     .post(Endpoints.orders, OrdersController.post)
     .put(Endpoints.orders, validateToken, OrdersController.update)
+    .put(`${Endpoints.orders}/setPreparation`, validateToken, OrdersController.setPreparation)
     .put(`${Endpoints.orders}/items`, validateToken, OrdersController.pushNewItems)
 
 export default router;
