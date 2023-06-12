@@ -6,6 +6,11 @@ class Validators {
             return false;
         }
     }
+
+    static checkType(value, type) {
+        const tp = typeof value;
+        return tp === type;
+    }
 }
 
 export default Validators;
