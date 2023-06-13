@@ -1,18 +1,18 @@
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
-  _id: { type: Number },
+  // _id: { type: Number },
   isActive: { type: Boolean, 
     required: [true, "Parametro (isActive) é obrigatório"] 
   },
-  categoria: { type: String },
-  categoryId: {
-    type: mongoose.Schema.Types.Number, ref: "categorias", required: true
+  category: {
+    type: mongoose.Schema.Types.ObjectId, ref: "categories", required: true
   },
   preco: { type: Number },
   produto: { type: String, 
     required: [true, "Parametro (produto) é obrigatório"],
   },
+  createDate: {type: Date, default: new Date()},
   descricao: { type: String },
   preparacao: Boolean,
   storeCode: { type: String, required: [true, "Parametro (storeCode) é obrigatório"] },
@@ -46,6 +46,6 @@ const productSchema = new mongoose.Schema({
   },
 });
 
-const products = mongoose.model("produtos", productSchema);
+const products = mongoose.model("products", productSchema);
 
 export default products;
