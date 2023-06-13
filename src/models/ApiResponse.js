@@ -33,8 +33,7 @@ class ApiResponse extends Error {
 
   static badRequest(message) {
     return new ApiResponse({
-      message: "Houve um problema com a requisição",
-      tecnical: message,
+      message: message ?? "Houve um problema com a requisição",
       status: 400,
     });
   }

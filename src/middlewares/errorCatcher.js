@@ -8,20 +8,20 @@ import ValidationError from '../controllers/errors/ValidationError.js';
 function errorCatcher(err, req, res, next) {
     console.error(err);
     if (err instanceof mongoose.Error.CastError) {
-        ApiResponse.badRequest().sendResponse(res)
+        return ApiResponse.badRequest().sendResponse(res)
     } else if (err instanceof mongoose.Error.ValidationError) {
-        new ValidationError(err).sendResponse(res);
+        return new ValidationError(err).sendResponse(res);
     } else if (err instanceof Jwt.JsonWebTokenError) {
         if (err.name === 'TokenExpiredError') {
-            ApiResponse.tokenExpired().sendResponse(res);
+            return ApiResponse.tokenExpired().sendResponse(res);
         }
         if (err instanceof Jwt.JsonWebTokenError) {
-            ApiResponse.unauthorized().sendResponse(res);
+            return ApiResponse.unauthorized().sendResponse(res);
         }
     } else if (err instanceof NotFoundError) {
-        err.sendResponse(res);
+        return err.sendResponse(res);
     } else {    
-        ApiResponse.dbError(err).sendResponse(res);
+        return ApiResponse.dbError(err).sendResponse(res);
     }
 }
 
