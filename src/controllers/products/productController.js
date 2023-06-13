@@ -34,7 +34,7 @@ class ProductController {
       if (Validators.checkField(storeCode)) {
           prod.storeCode = storeCode;
       }
-      req.query = Products.find(prod).populate("categoryId")
+      req.query = Products.find(prod).populate("category")
       next();
     } catch (e) {
       next(e);
@@ -93,6 +93,18 @@ class ProductController {
       }
     } catch (e) {
       next(e);
+    }
+  }
+
+  static async productsHasCategory(id) {
+    try {
+      const data = await Products.find({"category": id});
+      if (data.length) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
     }
   }
 }
