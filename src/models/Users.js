@@ -7,27 +7,13 @@ const userSchema = new mongoose.Schema({
     group_user: {type: String},
     username: {type: String},
     ativo: {type: Boolean},
-    establishments: {type: Array},
-    ests: {
-        type: [{
-            _id: Number,
-            storeName: String,
-            stores: {
-                type: [{
-                    id: String,
-                    location: String,
-                    url: String,
-                    isOpen: Boolean
-                }],
-                default: undefined
-            },
-            ownerId: String,
-            logo: String,
-        }]
-    },
+    establishments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "establishments"
+    }],
     token: {type: String},
 });
 
-const users = mongoose.model('usuarios', userSchema)
+const users = mongoose.model('users', userSchema)
 
 export default users;
