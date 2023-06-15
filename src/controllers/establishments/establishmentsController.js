@@ -1,90 +1,77 @@
-import establishments from "../../models/Establishments.js";
+import Establishments from "../../models/Establishments.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import Validators from "../../utils/utils.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 class EstablishmentsController {
-  static findAll = (req, res) => {
-    let query = new establishments(req.query);
-    establishments.find(query, { ownerId: 0 }, (err, est) => {
-      if (err) {
-        res.status(500).json(ApiResponse.dbError(err));
-      } else {
-        res.status(200).json(ApiResponse.returnSucess(est));
-      }
-    });
-  };
-
-  static findOne = (req, res) => {
-    const param = req.params;
-    establishments.findById(
-      { _id: param.id },
-      { ownerId: 0 },
-      (err, establishments) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(200).json(ApiResponse.returnSucess(establishments));
-        }
-      }
-    );
-  };
-
-  static add = (req, res) => {
-    let est = new establishments(req.body);
-    est.save((err, ests) => {
-      if (err) {
-        res.status(500).json(ApiResponse.dbError(err));
-      } else {
-        res.status(201).json(ApiResponse.returnSucess(ests));
-      }
-    });
-  };
-
-  static del = (req, res) => {
-    if (!Validators.checkField(req.body.id)) {
-      res.status(406).json(ApiResponse.parameterNotFound('id'))
-    } else {
-      establishments.findByIdAndDelete(req.body.id, (err) => {
-        if (err) {
-          res.status(500).json(ApiResponse.dbError(err));
-        } else {
-          res.status(200).json(ApiResponse.returnSucess());
-        }
-      })
+  static async findAll(req, res, next) {
+    try {
+      let query = req.query;
+      req.query = Establishments.find(query, { ownerId: 0 });
+      next();
+    } catch (e) {
+      next(e);
     }
-  };
+  }
 
-  static patch = (req, res) => {
-    if (!Validators.checkField(req.body.id)) {
-      res.status(406).json(ApiResponse.parameterNotFound('id'));
-    } else if (!Validators.checkField(req.body.data)) {
-      res.status(406).json(ApiResponse.parameterNotFound('data'))
-    } else if (!Validators.checkField(req.body.movement)) {
-      res.status(406).json(ApiResponse.parameterNotFound('movement'));
-    } else {
-      if (req.body.movement == 'push') {
-        establishments.findByIdAndUpdate(req.body.id, {
-          $push: {"stores": req.body.data},
-        }, (err) => {
-          if (err) {
-            res.status(500).json(ApiResponse.dbError(err));
-          } else {
-            res.status(201).json(ApiResponse.returnSucess())
-          }
-        })
-      } else if (req.body.movement == 'pull') {
-        establishments.findByIdAndUpdate(req.body.id, {
-          $pull: {"stores": req.body.data},
-        }, (err) => {
-          if (err) {
-            res.status(500).json(ApiResponse.dbError(err));
-          } else {
-            res.status(201).json(ApiResponse.returnSucess())
-          }
-        })
-      } else {
-        res.status(406).json(ApiResponse.parameterNotFound('movement'));
+  static async findOne(req, res, next) {
+    try {
+      const param = req.params;
+      let data = await Establishments.findById(param.id, { ownerId: 0 });
+      if (!data) {
+        throw new NotFoundError("Estabelecimento não localizado");
       }
+      return ApiResponse.returnSucess(data).sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async add(req, res, next) {
+    try {
+      let est = new Establishments(req.body);
+      await est.save();
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async del(req, res, next) {
+    try {
+      if (!Validators.checkField(req.body.id)) {
+        return ApiResponse.parameterNotFound('id').sendResponse(res);
+      }
+      await Establishments.findByIdAndDelete(req.body.id)
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async manageStore(req, res, next) {
+    try {
+      const {id, data, movement} = req.body;
+      if (!Validators.checkField(id)) {
+        return ApiResponse.parameterNotFound('id').sendResponse(res);
+      } 
+      if (!Validators.checkField(data)) {
+        return ApiResponse.parameterNotFound('data').sendResponse(res);
+      }
+      if (!(Validators.checkField(movement) && !(movement != "pull" && movement != "push"))) {
+        return ApiResponse.parameterNotFound('movement').sendResponse(res);
+      }
+      const process = movement == "push" ? {
+        $push: {"stores": data},
+      } : {
+        $pull: {"stores": {
+          "_id": data._id
+        }},
+      }
+      await Establishments.findByIdAndUpdate(id, process)
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
     }
   }
 }
