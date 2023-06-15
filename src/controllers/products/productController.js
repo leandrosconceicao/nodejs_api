@@ -3,6 +3,8 @@ import ApiResponse from "../../models/ApiResponse.js";
 import Validators from "../../utils/utils.js";
 import RegexBuilder from "../../utils/regexBuilder.js";
 import NotFoundError from '../errors/NotFoundError.js';
+import mongoose from 'mongoose';
+var ObjectId = mongoose.Types.ObjectId;
 
 class ProductController {
 
@@ -10,7 +12,7 @@ class ProductController {
     try {
       let id = req.params.id;
       const prod = await Products.findById(id)
-        .populate("categoryId")
+        .populate("category")
         .exec();
       if (!prod) {
         throw new NotFoundError("Produto não localizado");
@@ -21,12 +23,12 @@ class ProductController {
     }
   }
 
-  static findAll = async (req, res, next) => {
+  static async findAll(req, res, next) {
     try {
       let {id, produto, storeCode} = req.query;
       let prod = {};
       if (Validators.checkField(id)) {
-          prod._id = id;
+          prod._id = new ObjectId(id);
       } 
       if (Validators.checkField(produto)) {
           prod.produto = RegexBuilder.searchByName(produto);
@@ -39,7 +41,7 @@ class ProductController {
     } catch (e) {
       next(e);
     }
-  };
+  }
 
   static addProduct = async (req, res, next) => {
     try {
