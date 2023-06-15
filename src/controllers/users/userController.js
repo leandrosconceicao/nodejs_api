@@ -1,5 +1,5 @@
 import Users from "../../models/Users.js";
-import Establishments from "../../models/Establishments.js";
+// import Establishments from "../../models/Establishments.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
 import PassGenerator from "../../utils/passGenerator.js";
@@ -69,13 +69,10 @@ class UserController {
       }).select({
         _id: 0,
         pass: 0
-      })
+      }).populate("establishments");
       if (!users) {
         throw new NotFoundError("Dados incorretos ou inválidos.")
       } else {
-        let ests = await Establishments.find({_id: {$in: users.establishments}})
-        users.ests = ests;
-        // users.pass = "";
         const token = TokenGenerator.generate(body.email);
         res.set("Authorization", token);
         res.set("Access-Control-Expose-Headers", "*");
