@@ -12,6 +12,7 @@ router
     .post(Endpoints.orders, OrdersController.post)
     .put(Endpoints.orders, validateToken, OrdersController.update)
     .put(`${Endpoints.orders}/setPreparation`, validateToken, OrdersController.setPreparation)
-    .put(`${Endpoints.orders}/items`, validateToken, OrdersController.pushNewItems)
+    .patch(`${Endpoints.orders}/items`, validateToken, OrdersController.pushNewItems)
+    .patch(`${Endpoints.orders}/payments`, validateToken, OrdersController.addPayment)
 
 export default router;

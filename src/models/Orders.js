@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
+var ObjectId = mongoose.Types.ObjectId;
 
 const ordersSchema = new mongoose.Schema({
   // _id: {type: mongoose.Types.ObjectId},
   pedidosId: {type: Number},
   tableDescription: { type: String },
   tableId: { type: String },
-  date: { type: Date , default: new Date()},
+  createDate: { type: Date },
   orderType: { type: String,
     default: 'frontDesk',
     enum: {
@@ -29,11 +30,12 @@ const ordersSchema = new mongoose.Schema({
   },
   products: {
     type: [
-      {
+      new mongoose.Schema({
         quantity: Number,
         productName: String,
-        productId: Number,
+        productId: ObjectId,
         orderDescription: String,
+        category: String,
         needsPreparation: Boolean,
         setupIsFinished: Boolean,
         unitPrice: Number,
@@ -48,12 +50,12 @@ const ordersSchema = new mongoose.Schema({
           ],
           default: undefined,
         },
-      },
+      }),
     ],
   },
-  isPayed: { type: Boolean },
+  isPayed: { type: Boolean , default: false},
   client: {
-    type: mongoose.Schema.Types.ObjectId, ref: "clients", required: true
+    type: ObjectId, ref: "clients", required: true
   },
   deliveryAddress: {
     id: String,
@@ -66,14 +68,15 @@ const ordersSchema = new mongoose.Schema({
     zipCode: String,
     versionKey: false,
   },
-  obs: { type: String },
+  observations: { type: String },
   accountStatus: { type: String },
-  saller: { type: String },
-  storeCode: { type: String },
+  userCreate: {
+    type: ObjectId, ref: "users", required: true
+  },
+  storeCode: { type: String , required: true},
   payment: {
-    tipo: String,
-    operador: String,
-    data: {type: Date},
+    userCreate: {type: ObjectId, ref: "users"},
+    createDate: {type: Date},
     values: {
       type: [
         {
@@ -81,6 +84,7 @@ const ordersSchema = new mongoose.Schema({
           value: Number,
         },
       ],
+      default: undefined
     },
   },
   versionKey: false,
