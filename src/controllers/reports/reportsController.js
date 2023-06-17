@@ -1,32 +1,34 @@
 import ApiResponse from "../../models/ApiResponse.js";
 import TotalSales from "../../models/reports/Sales.js";
 import Validators from "../../utils/utils.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 class ReportsControllers {
 
-    static async quantifySales(req, res) {
+    static async quantifySales(req, res, next) {
         try {
-            let query = req.query;
+            let {storeCode, from, to, saller, type} = req.query;
             let or = {};
-            if (!Validators.checkField(query.storeCode)) {
-                return res.status(406).json(ApiResponse.parameterNotFound('(storeCode)'));
+            if (!Validators.checkField(storeCode)) {
+                return ApiResponse.parameterNotFound('storeCode').sendResponse(res);
             } else {
-                or.storeCode = query.storeCode;
+                or.storeCode = storeCode;
             }
-            if (Validators.checkField(query.from) && Validators.checkField(query.to)) {
-                or.date = {$gte: new Date(query.from), $lte: new Date(query.to)}
+            if (Validators.checkField(from) && Validators.checkField(to)) {
+                or.createDate = {$gte: new Date(from), $lte: new Date(to)}
             }
-            if (Validators.checkField(query.saller)) {
-                or.saller = query.saller;
+            if (Validators.checkField(saller)) {
+                or.userCreate = saller;
+            }
+            if (Validators.checkField(type)) {
+              or.orderType = type;
             }
             const sales = await TotalSales.aggregate([
                 {
-                    $match: or
+                    '$match': or
                 },
                 {
                   '$project': {
-                    'date': 1, 
-                    'storeCode': 1, 
                     'total': {
                       '$sum': {
                         '$map': {
@@ -40,6 +42,11 @@ class ReportsControllers {
                           'as': 'ix', 
                           'in': {
                             '$let': {
+                              'in': {
+                                '$multiply': [
+                                  '$$pre', '$$cal'
+                                ]
+                              }, 
                               'vars': {
                                 'pre': {
                                   '$arrayElemAt': [
@@ -51,22 +58,20 @@ class ReportsControllers {
                                     '$products.unitPrice', '$$ix'
                                   ]
                                 }
-                              }, 
-                              'in': {
-                                '$multiply': [
-                                  '$$pre', '$$cal'
-                                ]
                               }
                             }
                           }
                         }
                       }
-                    }
+                    }, 
+                    'createDate': 1, 
+                    'storeCode': 1,
+                    'orderType': 1
                   }
                 }
               ]);
             if (!sales) {
-                return res.status(400).json(ApiResponse.noDataFound());
+                throw new NotFoundError("Busca não localizou dados");
             } else {
                 let totalValue = 0;
                 let data = {};
@@ -75,10 +80,10 @@ class ReportsControllers {
                 }
                 data.totalValue = totalValue;
                 data.orders = sales;
-                return res.status(200).json(ApiResponse.returnSucess(data));
+                return ApiResponse.returnSucess(data).sendResponse(res);
             }
         } catch (e) {
-            return res.status(500).json(ApiResponse.dbError(e));
+            next(e);
         }
     }
 
