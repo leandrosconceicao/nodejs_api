@@ -8,11 +8,14 @@ class OrdersController {
   static async findOne(req, res, next) {
     try {
       let id = req.params.pedidosId;
-      const query = await Orders.findById(id).populate("client");
+      const query = await Orders.findById(id)
+        .populate('client')
+        .populate('userCreate', ['-establishments', '-pass'])
+        .populate('payment.userCreate', ['-establishments', '-pass'])
       if (!query) {
-        next(new NotFoundError('Pedido não encontrado'));
+        throw new NotFoundError('Pedido não encontrado');
       } else {
-        ApiResponse.returnSucess([query]).sendResponse(res);
+        ApiResponse.returnSucess(query).sendResponse(res);
       }
     } catch (e) {
       next(e);
@@ -75,7 +78,10 @@ class OrdersController {
       if (Validators.checkField(status)) {
         or.status = status;
       }
-      req.query = Orders.find(or).populate("client");
+      req.query = Orders.find(or)
+      .populate('client')
+      .populate('userCreate', ['-establishments', '-pass'])
+      .populate('payment.userCreate', ['-establishments', '-pass']);
       next();
     } catch (e) {
       return next(e);
@@ -89,11 +95,16 @@ class OrdersController {
         res.status(406).json(ApiResponse.parameterNotFound("(storeCode)"));
       } else {
         let order = new Orders(body);
-        order.date = Date.now();
-        order.payment.data = Date.now();
+        order.createDate = new Date();
+        if (order.payment.userCreate) {
+          order.payment.createDate = new Date();
+        }
         let or = await order.save();
         await OrdersController.updateId(or);
-        const newOrder = await Orders.findById(or.id).populate("client");
+        const newOrder = await Orders.findById(or.id)
+        .populate('client')
+        .populate('userCreate', ['-establishments', '-pass'])
+        .populate('payment.userCreate', ['-establishments', '-pass']);
         ApiResponse.returnSucess(newOrder).sendResponse(res);
       }
     } catch (e) {
@@ -107,31 +118,46 @@ class OrdersController {
     if (!counter.length) {
       count += 1;
     } else {
-      count = counter[0].seq_value;
+      count = counter[0].seq_value + 1;
     }
-    await Orders.findByIdAndUpdate(order.id, {"pedidosId": count + 1});
+    await Orders.findByIdAndUpdate(order.id, {"pedidosId": count});
     await Counter.updateMany({}, {"seq_value": count})
   }
 
   static async pushNewItems(req, res, next) {
     try {
-      let body = req.body;
-      if (!Validators.checkField(body.id)) {
-        res.status(406).json(ApiResponse.parameterNotFound("(id)"));
+      let {id, orders} = req.body;
+      if (!Validators.checkField(id)) {
+        return ApiResponse.parameterNotFound("id").sendResponse(res);
       }
-      if (!Validators.checkField(body.orders)) {
-        res.status(406).json(ApiResponse.parameterNotFound("(orders)"));
+      if (!Validators.checkField(orders)) {
+        return ApiResponse.parameterNotFound("orders").sendResponse(res);
       }
       const order = await Orders.findByIdAndUpdate(
-        body.id, {$push: { products: body.orders }}
+        id, {$push: { products: orders }}
       );
-      if (!order) {
-        ApiResponse.returnError({message: 'Nenhum dado atualizado'}).sendResponse(res);
-      } else {
-        ApiResponse.returnSucess(order).sendResponse(res);
-      }
+      return ApiResponse.returnSucess(order).sendResponse(res);
     } catch (e) {
       return next(e)
+    }
+  }
+
+  static async addPayment(req, res, next) {
+    try {
+      const {id, data} = req.body;
+      if (!Validators.checkField(id)) {
+        return ApiResponse.parameterNotFound('id').sendResponse(res);
+      }
+      if (!Validators.checkField(data)) {
+        return ApiResponse.parameterNotFound('data').sendResponse(res);
+      }
+      data.createDate = new Date();
+      await Orders.findByIdAndUpdate(id, {
+        payment: data
+      });
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
     }
   }
 

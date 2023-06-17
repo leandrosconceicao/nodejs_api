@@ -25,7 +25,7 @@ class ProductController {
 
   static async findAll(req, res, next) {
     try {
-      let {id, produto, storeCode} = req.query;
+      let {id, produto, storeCode, isActive, categoryId} = req.query;
       let prod = {};
       if (Validators.checkField(id)) {
           prod._id = new ObjectId(id);
@@ -33,6 +33,12 @@ class ProductController {
       if (Validators.checkField(produto)) {
           prod.produto = RegexBuilder.searchByName(produto);
       } 
+      if (Validators.checkField(categoryId)) {
+        prod.category = new ObjectId(categoryId);
+      }
+      if (Validators.checkField(isActive)) {
+        prod.isActive = isActive;
+      }
       if (Validators.checkField(storeCode)) {
           prod.storeCode = storeCode;
       }

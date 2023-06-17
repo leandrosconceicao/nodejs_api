@@ -5,53 +5,75 @@ import TokenGenerator from "../../utils/tokenGenerator.js";
 import PassGenerator from "../../utils/passGenerator.js";
 import Validators from "../../utils/utils.js";
 import NotFoundError from "../errors/NotFoundError.js";
+import mongoose from "mongoose";
 
 class UserController {
-  static add = (req, res, next) => {
-    let user = new Users(req.body);
-    user.pass = new PassGenerator(user.pass).build();
-    user.save((err, users) => {
-      if (err) {
-        next(err);
-      } else {
-        ApiResponse.returnSucess(users).sendResponse(res);
-      }
-    });
-  };
-
-  static delete = (req, res, next) => {
-    let id = req.body.id;
-    Users.findByIdAndDelete(id, (err) => {
-      if (err) {
-        next(err);
-      } else {
-        ApiResponse.returnSucess().sendResponse(res);
-      }
-    });
-  };
-
-  static update = (req, res, next) => {
-    let body = req.body;
-    Users.findByIdAndUpdate(body.id, { $set: body.data }, (err) => {
-      if (err) {
-        next(err);
-      } else {
-        ApiResponse.returnSucess().sendResponse(res);
-      }
-    });
-  };
-
-  static findAll = async (req, res, next) => {
+  static async add(req, res, next) {
     try {
-      const users = await Users.find(req.query);
-      if (!users) {
-        throw new NotFoundError("Busca não localizou dados");
-      }
+      let user = new Users(req.body);
+      user.pass = new PassGenerator(user.pass).build();
+      const users = await user.save();
       return ApiResponse.returnSucess(users).sendResponse(res);
     } catch (e) {
       next(e);
     }
-  };
+  }
+
+  static async delete(req, res, next) {
+    try {
+      let id = req.body.id;
+      if (!Validators.checkField(id)) {
+        return ApiResponse.parameterNotFound('id');
+      }
+      await Users.findByIdAndDelete(id);
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async update(req, res, next) {
+    try {
+      const {id, data} = req.body;
+      if (!Validators.checkField(id)) {
+        return ApiResponse.parameterNotFound('id').sendResponse(res);
+      }
+      if (!Validators.checkField(data)) {
+        return ApiResponse.parameterNotFound('data').sendResponse(res);
+      }
+      await Users.findByIdAndUpdate(id, { $set: data });
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async findOne(req, res, next) {
+    try {
+      const id = req.params;
+      if (!Validators.checkField(id)) {
+        return ApiResponse.parameterNotFound('id').sendResponse(res);
+      }
+      const user = await Users.findById(new mongoose.Types.ObjectId('648b7cfa5cb22112500c499e'));
+      if (!user) {
+        throw new NotFoundError("Usuário não localizado");
+      }
+      return ApiResponse.returnSucess(user).sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async findAll(req, res, next) {
+    try {
+      req.query = Users.find(req.query).select({
+        pass: 0
+      }).populate("establishments");
+      next();
+    } catch (e) {
+      next(e);
+    }
+  }
 
   static async authenticate(req, res, next) {
     try {
@@ -64,10 +86,9 @@ class UserController {
       }
       const hashPass = new PassGenerator(body.password).build();
       let users = await Users.findOne({
-        _id: body.email,
+        email: body.email,
         pass: hashPass,
       }).select({
-        _id: 0,
         pass: 0
       }).populate("establishments");
       if (!users) {
