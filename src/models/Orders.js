@@ -4,8 +4,9 @@ var ObjectId = mongoose.Types.ObjectId;
 const ordersSchema = new mongoose.Schema({
   // _id: {type: mongoose.Types.ObjectId},
   pedidosId: {type: Number},
-  tableDescription: { type: String },
-  tableId: { type: String },
+  accountId: { 
+    type: ObjectId, ref: 'accounts'
+  },
   createDate: { type: Date },
   orderType: { type: String,
     default: 'frontDesk',
@@ -15,11 +16,6 @@ const ordersSchema = new mongoose.Schema({
     }
   },
   accepted: { type: Boolean },
-  lastModified: {
-    date: {type: Date},
-    user: {type: String},
-  },
-  total: {type: Number},
   status: {
     type: "String",
     default: "pending",
@@ -69,24 +65,26 @@ const ordersSchema = new mongoose.Schema({
     versionKey: false,
   },
   observations: { type: String },
-  accountStatus: { type: String },
   userCreate: {
     type: ObjectId, ref: "users", required: true
   },
   storeCode: { type: String , required: true},
   payment: {
-    userCreate: {type: ObjectId, ref: "users"},
-    createDate: {type: Date},
-    values: {
-      type: [
-        {
-          form: String,
-          value: Number,
-        },
-      ],
-      default: undefined
-    },
+    type: ObjectId, ref: 'payments'
   },
+  // payment: {
+  //   userCreate: {type: ObjectId, ref: "users"},
+  //   createDate: {type: Date},
+  //   values: {
+  //     type: [
+  //       {
+  //         form: String,
+  //         value: Number,
+  //       },
+  //     ],
+  //     default: undefined
+  //   },
+  // },
   versionKey: false,
 });
 
