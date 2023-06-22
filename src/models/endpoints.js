@@ -2,12 +2,13 @@ class Endpoints {
 
     static home = '/';
     static products = '/products';
-    static configs = '/configs';
+    static paymentForms = '/paymentForms';
     static product_images = `${this.products}/images`;
     static menu_items = `${this.products}/menu_items`;
     static add_ones = `${this.products}/add_ones`;
     static categories = '/categories';
     static orders = '/orders';
+    static payments = "/payments";
     static authentication = '/authentication';
     static establishments = '/establishments';
     static users = '/users';
@@ -22,11 +23,13 @@ class Endpoints {
     static queue = '/queue';
     static reports = '/reports';
     static quantSales = `${this.reports}/quantify_sales`;
+    static quantSalesByProduct = `${this.reports}/quantify_sales_by_product`;
     static bakery = '/bakery';
     static bakery_ingredients = `${this.bakery}/ingredients`
     static bakery_recipes = `${this.bakery}/recipes`;
     static bakery_configs = `${this.bakery}/configs`;
     static bakery_expanses = `${this.bakery}/expanses`;
+    static accounts = '/accounts';
 }
 
 export default Endpoints;
