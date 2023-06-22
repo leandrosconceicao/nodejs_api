@@ -2,7 +2,11 @@ import Validators from "../../utils/utils.js";
 import Orders from "../../models/Orders.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import Counter from "../base/Counters.js";
+import PaymentController from "../payments/paymentController.js";
 import NotFoundError from "../errors/NotFoundError.js";
+import InvalidParameter from "../errors/InvalidParameter.js";
+import mongoose from "mongoose";
+var ObjectId = mongoose.Types.ObjectId;
 
 class OrdersController {
   static async findOne(req, res, next) {
@@ -10,8 +14,10 @@ class OrdersController {
       let id = req.params.pedidosId;
       const query = await Orders.findById(id)
         .populate('client')
+        .populate('accountId', ['-payments', '-orders'])
         .populate('userCreate', ['-establishments', '-pass'])
-        .populate('payment.userCreate', ['-establishments', '-pass'])
+        // .populate('payment')
+        // .populate('payment.userCreate', ['-establishments', '-pass']);
       if (!query) {
         throw new NotFoundError('Pedido não encontrado');
       } else {
@@ -32,6 +38,7 @@ class OrdersController {
         id, 
         isTableOrders, 
         clientId,
+        paymentId,
         idTable,
         status,
         accountStatus,
@@ -78,10 +85,15 @@ class OrdersController {
       if (Validators.checkField(status)) {
         or.status = status;
       }
+      if (Validators.checkField(paymentId)) {
+        or.payment = new ObjectId(paymentId);
+      }
       req.query = Orders.find(or)
       .populate('client')
+      .populate('accountId', ['-payments', '-orders'])
       .populate('userCreate', ['-establishments', '-pass'])
-      .populate('payment.userCreate', ['-establishments', '-pass']);
+      // .populate('payment')
+      // .populate('payment.userCreate', ['-establishments', '-pass']);
       next();
     } catch (e) {
       return next(e);
@@ -92,24 +104,45 @@ class OrdersController {
     try { 
       let body = req.body;
       if (!Validators.checkField(body.storeCode)) {
-        res.status(406).json(ApiResponse.parameterNotFound("(storeCode)"));
+        throw new InvalidParameter("storeCode");
       } else {
         let order = new Orders(body);
         order.createDate = new Date();
-        if (order.payment.userCreate) {
-          order.payment.createDate = new Date();
+        if (!Validators.checkField(body.accountId)) {
+          const payment = await PaymentController.savePayment(body.payment);
+          order.payment = payment._id;
         }
         let or = await order.save();
         await OrdersController.updateId(or);
         const newOrder = await Orders.findById(or.id)
         .populate('client')
+        .populate('accountId', ['-payments', '-orders'])
         .populate('userCreate', ['-establishments', '-pass'])
-        .populate('payment.userCreate', ['-establishments', '-pass']);
+        // .populate('payment')
+        // .populate('payment.userCreate', ['-establishments', '-pass']);
         ApiResponse.returnSucess(newOrder).sendResponse(res);
       }
     } catch (e) {
       next(e)
     }
+  }
+
+  static async getOrders(id) {
+    const data = await Orders.find({accountId: new ObjectId(id), status: {$ne: "cancelled"}})
+      .populate('client')
+      .populate('accountId', ['-payments', '-orders'])
+      .populate('userCreate', ['-establishments', '-pass']);
+    return data;
+    // let data = [];
+    // for (let i = 0; i < orders.length; i++) {
+    //     let order = await Orders.findById(orders[i])
+    //         .populate('client')
+    //         .populate('accountId', ['-payments', '-orders'])
+    //         .populate('userCreate', ['-establishments', '-pass'])
+    //         .populate('payment.userCreate', ['-establishments', '-pass']);
+    //     data.push(order);
+    // }
+    // return data;
   }
 
   static async updateId(order) {
