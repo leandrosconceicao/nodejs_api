@@ -7,5 +7,6 @@ const router = express.Router();
 
 router
     .get(Endpoints.quantSales, validateToken, ReportsControllers.quantifySales)
+    .get(Endpoints.quantSalesByProduct, validateToken, ReportsControllers.quantifySalesByProduct)
 
 export default router;
