@@ -4,6 +4,7 @@ import ApiResponse from '../models/ApiResponse.js';
 import Jwt from "jsonwebtoken";
 import ValidationError from '../controllers/errors/ValidationError.js';
 import DuplicateError from '../controllers/errors/DuplicateError.js';
+import InvalidParameter from '../controllers/errors/InvalidParameter.js';
 
 // eslint-disable-next-line no-unused-vars
 function errorCatcher(err, req, res, next) {
@@ -23,6 +24,9 @@ function errorCatcher(err, req, res, next) {
         }
     } 
     if (err instanceof NotFoundError) {
+        return err.sendResponse(res);
+    }
+    if (err instanceof InvalidParameter) {
         return err.sendResponse(res);
     }
     if (err.code == 11000) {
