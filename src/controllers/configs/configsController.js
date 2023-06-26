@@ -1,5 +1,4 @@
 import Validators from '../../utils/utils.js';
-import TokenGenerator from '../../utils/tokenGenerator.js';
 import Configs from '../../models/bakery/Configs.js';
 import ApiResponse from '../../models/ApiResponse.js';
 

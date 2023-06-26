@@ -5,7 +5,7 @@ const paymentSchema = new mongoose.Schema({
     accountId: {
         type: ObjectId, ref: 'accounts'
     },
-    storeCode: {type: String, required: [true, "Parametro (storeCode) é obrigatório"]},
+    storeCode: {type: mongoose.Types.ObjectId, ref: "establishments", required: [true, "Parametro (storeCode) é obrigatório"]},
     userCreate: {type: ObjectId, ref: "users", required: [true, "Parametro (userCreate) é obrigatório"]},
     createDate: {type: Date, required: [true, "Parametro (createDate) é obrigatório"]},
     value: {

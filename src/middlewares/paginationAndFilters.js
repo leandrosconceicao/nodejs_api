@@ -8,7 +8,7 @@ async function paginationAndFilters(req, res, next) {
         const ordenationConfig = headers.getOrderBy();
         const request = req.query;
         const parsedData = await request.find()
-            .sort({[ordenationConfig.orderBy]: headers.ordenation})
+            .sort({[ordenationConfig.orderBy]: ordenationConfig.ordenation})
             .skip(paginationConfig.pagination)
             .limit(paginationConfig.limit)
         ApiResponse.returnSucess(parsedData).sendResponse(res);

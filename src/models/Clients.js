@@ -10,6 +10,10 @@ const clientsSchema = new mongoose.Schema({
     phoneNumber: { type: String },
     passwordResetToken: {type: String, select: false},
     passwordResetExpires: {type: Date, select: false},
+    establishments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "establishments"
+    }],
     address: {
         type: [{
                 id: String,

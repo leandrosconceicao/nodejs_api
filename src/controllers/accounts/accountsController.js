@@ -1,11 +1,12 @@
 import Validators from "../../utils/utils.js";
 import ApiResponse from "../../models/ApiResponse.js";
-import Accounts from "../../models/bakery/Accounts.js";
+import Accounts from "../../models/Accounts.js";
 import OrdersController from "../../controllers/orders/ordersController.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
 import PaymentController from "../payments/paymentController.js";
-
+import mongoose from "mongoose";
+var ObjectId = mongoose.Types.ObjectId;
 class AccountsController {
     static async findAll(req, res, next) {
         try {
@@ -54,6 +55,22 @@ class AccountsController {
             let newAccount = new Accounts(req.body);
             newAccount.createDate = new Date();
             await newAccount.save();
+            return ApiResponse.returnSucess().sendResponse(res);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    static async closeAccount(req, res, next) {
+        try {
+            const {id, status} = req.body;
+            if (!Validators.checkField(id)) {
+                throw new InvalidParameter("id");
+            }
+            if (!Validators.checkField(status)) {
+                throw new InvalidParameter("status");
+            }
+            await Accounts.findByIdAndUpdate(new ObjectId(id), {status: status});
             return ApiResponse.returnSucess().sendResponse(res);
         } catch (e) {
             next(e);

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const configSchema = new mongoose.Schema({
-    storeCode: {type: String, required: true, unique: true},
+    storeCode: {type: mongoose.Types.ObjectId, ref: "establishments", required: [true, "Parametro (storeCode) é obrigatório"], unique: true},
     daysOfWork: {type: Number, default: 0},
     hoursPerDay: {type: Number, default: 0},
     averageGain: {type: mongoose.Types.Decimal128, default: 0},

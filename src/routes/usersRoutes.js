@@ -12,6 +12,8 @@ router
     .get(`${Endpoints.users}/:id`, validateToken, UserController.findOne)
     .post(Endpoints.users, validateToken, UserController.add)
     .delete(Endpoints.users, validateToken, UserController.delete)
+    .patch(`${Endpoints.users}/change_password`, validateToken, UserController.updatePass)
+    .patch(Endpoints.users, validateToken, UserController.update)
     .post(Endpoints.authentication, UserController.authenticate)
 
 export default router;

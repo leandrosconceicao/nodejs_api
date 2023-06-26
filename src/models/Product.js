@@ -15,7 +15,7 @@ const productSchema = new mongoose.Schema({
   createDate: {type: Date, default: new Date()},
   descricao: { type: String },
   preparacao: Boolean,
-  storeCode: { type: String, required: [true, "Parametro (storeCode) é obrigatório"] },
+  storeCode: {type: mongoose.Types.ObjectId, ref: "establishments", required: [true, "Parametro (storeCode) é obrigatório"] },
   addOnes: {
     type: [
       {

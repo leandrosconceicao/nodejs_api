@@ -15,7 +15,7 @@ const ordersSchema = new mongoose.Schema({
       message: "O tipo {VALUE} não é um valor permitido"
     }
   },
-  accepted: { type: Boolean },
+  accepted: { type: Boolean , default: undefined},
   status: {
     type: "String",
     default: "pending",
@@ -51,7 +51,7 @@ const ordersSchema = new mongoose.Schema({
   },
   isPayed: { type: Boolean , default: false},
   client: {
-    type: ObjectId, ref: "clients", required: true
+    type: ObjectId, ref: "clients", required: [true, "Parametro (client) é obrigatório"]
   },
   deliveryAddress: {
     id: String,
@@ -66,25 +66,12 @@ const ordersSchema = new mongoose.Schema({
   },
   observations: { type: String },
   userCreate: {
-    type: ObjectId, ref: "users", required: true
+    type: ObjectId, ref: "users", required: [true, "Parametro (storeCode) é obrigatório"]
   },
-  storeCode: { type: String , required: true},
+  storeCode: {type: mongoose.Types.ObjectId, ref: "establishments" , required: [true, "Parametro (storeCode) é obrigatório"]},
   payment: {
     type: ObjectId, ref: 'payments'
   },
-  // payment: {
-  //   userCreate: {type: ObjectId, ref: "users"},
-  //   createDate: {type: Date},
-  //   values: {
-  //     type: [
-  //       {
-  //         form: String,
-  //         value: Number,
-  //       },
-  //     ],
-  //     default: undefined
-  //   },
-  // },
   versionKey: false,
 });
 

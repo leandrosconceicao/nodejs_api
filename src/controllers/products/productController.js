@@ -40,7 +40,7 @@ class ProductController {
         prod.isActive = isActive;
       }
       if (Validators.checkField(storeCode)) {
-          prod.storeCode = storeCode;
+          prod.storeCode = new ObjectId(storeCode);
       }
       req.query = Products.find(prod).populate("category")
       next();

@@ -5,6 +5,7 @@ import TokenGenerator from "../../utils/tokenGenerator.js";
 import PassGenerator from "../../utils/passGenerator.js";
 import Validators from "../../utils/utils.js";
 import NotFoundError from "../errors/NotFoundError.js";
+import InvalidParameters from "../errors/InvalidParameter.js";
 import mongoose from "mongoose";
 
 class UserController {
@@ -41,7 +42,29 @@ class UserController {
       if (!Validators.checkField(data)) {
         return ApiResponse.parameterNotFound('data').sendResponse(res);
       }
-      await Users.findByIdAndUpdate(id, { $set: data });
+      await Users.findByIdAndUpdate(id, {
+        isActive: data.isActive,
+        group_user: data.group_user,
+        username: data.username,
+      });
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async updatePass(req, res, next) {
+    try {
+      const {id, pass} = req.body;
+      if (!Validators.checkField(id)) {
+        throw new InvalidParameters("id");
+      }
+      if (!Validators.checkField(pass)) {
+        throw new InvalidParameters("pass");
+      }
+      await Users.findByIdAndUpdate(id, {
+        pass: new PassGenerator(pass).build()
+      });
       return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
       next(e);

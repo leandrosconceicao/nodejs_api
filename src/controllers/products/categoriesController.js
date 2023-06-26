@@ -3,6 +3,8 @@ import ApiResponse from "../../models/ApiResponse.js";
 import Validators from "../../utils/utils.js";
 import RegexBuilder from "../../utils/regexBuilder.js";
 import ProductController from "./productController.js";
+import mongoose from "mongoose";
+var ObjectId = mongoose.Types.ObjectId;
 
 class CategoryController {
   static async findAll(req, res, next) {
@@ -13,7 +15,7 @@ class CategoryController {
         cat._id = id;
       }
       if (Validators.checkField(storeCode)) {
-        cat.storeCode = storeCode;
+        cat.storeCode = new ObjectId(storeCode);
       }
       if (Validators.checkField(nome)) {
         cat.nome = RegexBuilder.searchByName(nome);

@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const addOneSchema = new mongoose.Schema({
   _id: { type: String },
-  storeCode: { type: String },
+  storeCode: {type: mongoose.Types.ObjectId, ref: "establishments", required: [true, "Parametro (storeCode) é obrigatório"]},
   name: { type: String },
   price: { type: Number },
   maxQtdAllowed: { type: Number },

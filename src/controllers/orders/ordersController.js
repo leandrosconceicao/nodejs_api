@@ -5,6 +5,7 @@ import Counter from "../base/Counters.js";
 import PaymentController from "../payments/paymentController.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
+import PeriodGenerator from "../../utils/periodGenerator.js";
 import mongoose from "mongoose";
 var ObjectId = mongoose.Types.ObjectId;
 
@@ -36,17 +37,19 @@ class OrdersController {
         from, 
         to, 
         id, 
-        isTableOrders, 
         clientId,
         paymentId,
-        idTable,
+        accountId,
         status,
-        accountStatus,
         saller,
         accepted,
         storeCode
       } = req.query;
       let or = {}
+      if (!Validators.checkField(storeCode)) {
+        throw InvalidParameter("storeCode");
+      }
+      or.storeCode = new ObjectId(storeCode);
       if (Validators.checkField(isPreparation)) {
         or.products = {$elemMatch: {"setupIsFinished": false, "needsPreparation": true}}
       }
@@ -54,33 +57,22 @@ class OrdersController {
         or.orderType = type;
       }
       if (Validators.checkField(from) && Validators.checkField(to)) {
-        or.date = {$gte: new Date(from), $lte: new Date(to)}
+        or.createDate = new PeriodGenerator(from, to).buildQuery();
       }
       if (Validators.checkField(id)) {
         or._id = id;
       }
-      if (Validators.checkField(isTableOrders)) {
-        if (isTableOrders) {
-          or.tableId = { $ne: "" }
-        }
-      }
       if (Validators.checkField(clientId)) {
         or.client._id = clientId;
       }
-      if (Validators.checkField(idTable)) {
-        or.tableId = idTable;
-      }
-      if (Validators.checkField(accountStatus)) {
-        or.accountStatus = accountStatus;
+      if (Validators.checkField(accountId)) {
+        or.accountId = accountId;
       }
       if (Validators.checkField(saller)) {
         or.saller = saller;
       }
       if (Validators.checkField(accepted)) {
         or.accepted = accepted;
-      }
-      if (Validators.checkField(storeCode)) {
-        or.storeCode = storeCode;
       }
       if (Validators.checkField(status)) {
         or.status = status;
@@ -127,22 +119,13 @@ class OrdersController {
     }
   }
 
+
   static async getOrders(id) {
     const data = await Orders.find({accountId: new ObjectId(id), status: {$ne: "cancelled"}})
       .populate('client')
       .populate('accountId', ['-payments', '-orders'])
       .populate('userCreate', ['-establishments', '-pass']);
     return data;
-    // let data = [];
-    // for (let i = 0; i < orders.length; i++) {
-    //     let order = await Orders.findById(orders[i])
-    //         .populate('client')
-    //         .populate('accountId', ['-payments', '-orders'])
-    //         .populate('userCreate', ['-establishments', '-pass'])
-    //         .populate('payment.userCreate', ['-establishments', '-pass']);
-    //     data.push(order);
-    // }
-    // return data;
   }
 
   static async updateId(order) {
