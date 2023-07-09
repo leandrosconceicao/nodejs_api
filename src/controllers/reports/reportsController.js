@@ -6,6 +6,7 @@ import NotFoundError from "../errors/NotFoundError.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
 import Orders from "../../models/Orders.js";
 import Products from "../../models/Product.js";
+import PeriodGenerator from "../../utils/periodGenerator.js";
 
 var ObjectId = mongoose.Types.ObjectId;
 
@@ -13,23 +14,22 @@ class ReportsControllers {
   static async quantifySales(req, res, next) {
     try {
       let { storeCode, from, to, saller, type, product } = req.query;
-      let or = {};
+      let query = {};
       if (!Validators.checkField(storeCode)) {
-        return ApiResponse.parameterNotFound("storeCode").sendResponse(res);
-      } else {
-        or.storeCode = storeCode;
+        throw new InvalidParameter('storeCode');
       }
+      query.storeCode = new ObjectId(storeCode);
       if (Validators.checkField(from) && Validators.checkField(to)) {
-        or.createDate = { $gte: new Date(from), $lte: new Date(to) };
+        query.createDate = new PeriodGenerator(from, to).buildQuery();
       }
       if (Validators.checkField(saller)) {
-        or.userCreate = saller;
+        query.userCreate = saller;
       }
       if (Validators.checkField(type)) {
-        or.orderType = type;
+        query.orderType = type;
       }
       if (Validators.checkField(product)) {
-        or.products = {
+        query.products = {
           $elemMatch: {
             productId: {
               $in: product.map((e) => new ObjectId(e)),
@@ -37,12 +37,12 @@ class ReportsControllers {
           },
         };
       }
-      or.status = {
+      query.status = {
         $ne: "cancelled",
       };
       const sales = await TotalSales.aggregate([
         {
-          $match: or,
+          $match: query,
         },
         {
           $project: {
@@ -78,8 +78,9 @@ class ReportsControllers {
             },
             createDate: 1,
             storeCode: 1,
+            pedidosId: 1,
             orderType: 1,
-            products: 1,
+            // products: 1,
           },
         },
       ]);
@@ -92,7 +93,7 @@ class ReportsControllers {
           totalValue += sales[i].total;
         }
         data.totalValue = totalValue;
-        data.orders = sales;
+        data.orders = sales.map((e) => e);
         return ApiResponse.returnSucess(data).sendResponse(res);
       }
     } catch (e) {
@@ -109,7 +110,7 @@ class ReportsControllers {
       }
       query.storeCode = storeCode;
       if (Validators.checkField(from) && Validators.checkField(to)) {
-        query.createDate = { $gte: new Date(from), $lte: new Date(to) };
+        query.createDate = new PeriodGenerator(from, to).buildQuery();
       }
       if (Validators.checkField(saller)) {
         query.userCreate = saller;
@@ -117,7 +118,18 @@ class ReportsControllers {
       if (Validators.checkField(type)) {
         query.orderType = type;
       }
-      if (Validators.checkField(product) && !Validators.checkField(category)) {
+      if (!Validators.checkField(product) && !Validators.checkField(category)) {
+        const prods = await getProducts(storeCode);
+        const prodList = prods.map((e) => e._id);
+        query.products = {
+          $elemMatch: {
+            productId: {
+              $in: prodList
+            }
+          }
+        }
+        product = prodList.map((e) => e.toString());
+      } else if (Validators.checkField(product) && !Validators.checkField(category)) {
         const isList = (typeof product) == 'object';
         query.products = {
           $elemMatch: {
@@ -126,7 +138,7 @@ class ReportsControllers {
             },
           },
         };
-      }
+      } 
       if (Validators.checkField(category)) {
         const getProdList = await getProductsFromCategory(category);
         const prodList = getProdList.map((e) => e._id);
@@ -137,33 +149,34 @@ class ReportsControllers {
             }
           }
         }
-        product = prodList.map((e) => e.toString())
+        product = prodList.map((e) => e.toString());
       }
       query.status = {
         $ne: "cancelled",
       };
-      query.isPayed = true;
+      // query.isPayed = true;
       const orders = await Orders.find(query)
         .select({
           products: 1,
           payment: 1,
         })
+        .populate("payment")
         .lean();
       const data = prepareData(orders, product);
       const total = getTotal(data);
       const totalPay = getTotalPay(data);
       const forms = getForms(data);
-      const diff = getTotalDiff(data);
-      const filterOrders = data.map((e) => {
-        delete e.diffPay;
-        return e;
-      })
+      // const diff = getTotalDiff(data);
+      // const filterOrders = data.map((e) => {
+      //   delete e.diffPay;
+      //   return e;
+      // })
       return ApiResponse.returnSucess({
         total: total,
         totalPay: totalPay,
-        difference: diff,
+        // difference: diff,
         payments: forms,
-        orders: filterOrders,
+        // orders: filterOrders,
       }).sendResponse(res);
     } catch (e) {
       next(e);
@@ -181,6 +194,10 @@ async function getProductsFromCategory(category) {
     _id: 1
   }).lean();
   return products;
+}
+
+async function getProducts(storeCode) {
+  return await Products.find({storeCode: new ObjectId(storeCode)}).lean();
 }
 
 function prepareData(orders, product) {
@@ -210,42 +227,51 @@ function getForms(data) {
   let credit = [];
   let money = [];
   let pix = [];
-  data.map((e) => e.payment).forEach((pay) => {
-    debit.push(...pay.values.filter((e) => e.form == 'debit'));
-    credit.push(...pay.values.filter((e) => e.form == 'credit'));
-    money.push(...pay.values.filter((e) => e.form == 'money'));
-    pix.push(...pay.values.filter((e) => e.form == 'pix'));
+  data.filter((el) => el.payment !== undefined).map((e) => e.payment).forEach((pay) => {
+    if (pay.value.form == 'debit') {
+      debit.push(pay.value);
+    } else if (pay.value.form == 'credit') {
+      credit.push(pay.value);
+    } else if (pay.value.form == 'money') {
+      money.push(pay.value);
+    } else {
+      pix.push(pay.value);
+    }
   })
-  return {
-    debit: {
+  return [
+    {
+      form: "debit",
       total: getValues(debit),
       payments: debit
     },
-    credit: {
+    {
+      form: "credit",
       total: getValues(credit),
       payments: credit
     },
-    money: {
+    {
+      form: "money",
       total: getValues(money),
       payments: money
     },
-    pix: {
+    {
+      form: "pix",
       total: getValues(pix),
       payments: pix
     }
-  };
+  ];
 }
 
 function getValues(data) {
   return data.reduce((total, element) => total + (element.value), 0);
 }
 
-function getTotalDiff(data) {
-  return data.reduce(
-    (total, value) => total + value.diffPay.reduce((tot, vl) => tot + vl, 0),
-    0
-  );
-}
+// function getTotalDiff(data) {
+//   return data.reduce(
+//     (total, value) => total + value.diffPay.reduce((tot, vl) => tot + vl, 0),
+//     0
+//   );
+// }
 
 function getTotal(data) {
   return data.reduce(
@@ -259,7 +285,7 @@ function getTotal(data) {
 function getTotalPay(data) {
   return data.reduce(
     (total, value) =>
-      total + value.payment.values.reduce((tot, vl) => tot + vl.value, 0),
+      total + (value.payment === undefined ? 0 : value.payment.value.value),
     0
   );
 }
