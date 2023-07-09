@@ -24,6 +24,7 @@ class menuItemsController {
                 localField: "_id",
                 foreignField: "category",
                 as: "products",
+                pipeline: [ {$match: {'isActive': true}} ], 
               },
             },
             {
