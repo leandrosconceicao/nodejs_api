@@ -47,7 +47,7 @@ class OrdersController {
       } = req.query;
       let or = {}
       if (!Validators.checkField(storeCode)) {
-        throw InvalidParameter("storeCode");
+        throw new InvalidParameter("storeCode");
       }
       or.storeCode = new ObjectId(storeCode);
       if (Validators.checkField(isPreparation)) {
