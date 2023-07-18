@@ -5,9 +5,9 @@ const establishmentsSchema = new mongoose.Schema({
     createDate: {type: Date, default: new Date()},
     location: {type: String, default: ""},   
     isOpen: {type: Boolean, default: false},
-    ownerId: {type: String, unique: true, required: [true, "Parametro (ownerId) é obrigatório"]},
-    logo: {type: String},
-    url: {type: String},
+    ownerId: {type: String, required: [true, "Parametro (ownerId) é obrigatório"]},
+    logo: {type: String, default: ""},
+    url: {type: String, default: ""},
 }, {
     versionKey: false,
 })

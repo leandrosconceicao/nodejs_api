@@ -37,15 +37,16 @@ class UserController {
     try {
       const {id, data} = req.body;
       if (!Validators.checkField(id)) {
-        return ApiResponse.parameterNotFound('id').sendResponse(res);
+        throw new InvalidParameters("id");
       }
       if (!Validators.checkField(data)) {
-        return ApiResponse.parameterNotFound('data').sendResponse(res);
+        throw new InvalidParameters("data");
       }
       await Users.findByIdAndUpdate(id, {
         isActive: data.isActive,
         group_user: data.group_user,
         username: data.username,
+        establishments: data.establishments
       });
       return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
