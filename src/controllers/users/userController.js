@@ -1,5 +1,4 @@
 import Users from "../../models/Users.js";
-// import Establishments from "../../models/Establishments.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import TokenGenerator from "../../utils/tokenGenerator.js";
 import PassGenerator from "../../utils/passGenerator.js";
@@ -7,6 +6,7 @@ import Validators from "../../utils/utils.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import InvalidParameters from "../errors/InvalidParameter.js";
 import mongoose from "mongoose";
+var ObjectId = mongoose.Types.ObjectId;
 
 class UserController {
   static async add(req, res, next) {
@@ -56,12 +56,23 @@ class UserController {
 
   static async updatePass(req, res, next) {
     try {
-      const {id, pass} = req.body;
+      const {activePassword, id, pass} = req.body;
+      if (!Validators.checkField(activePassword)) {
+        throw new InvalidParameters("activePassword");
+      }
       if (!Validators.checkField(id)) {
         throw new InvalidParameters("id");
       }
       if (!Validators.checkField(pass)) {
         throw new InvalidParameters("pass");
+      }
+      const activePass = new PassGenerator(activePassword).build();
+      const user = await Users.findOne({
+        _id: new ObjectId(id),
+        pass: activePass
+      }).lean();
+      if (!user) {
+        throw new NotFoundError("Dados inválidos ou incorretos.");
       }
       await Users.findByIdAndUpdate(id, {
         pass: new PassGenerator(pass).build()
@@ -78,7 +89,7 @@ class UserController {
       if (!Validators.checkField(id)) {
         return ApiResponse.parameterNotFound('id').sendResponse(res);
       }
-      const user = await Users.findById(new mongoose.Types.ObjectId('648b7cfa5cb22112500c499e'));
+      const user = await Users.findById(id);
       if (!user) {
         throw new NotFoundError("Usuário não localizado");
       }
@@ -90,7 +101,20 @@ class UserController {
 
   static async findAll(req, res, next) {
     try {
-      req.query = Users.find(req.query).select({
+      const {storeCode, group_user, username} = req.query;
+      const query = {};
+      if (Validators.checkField(storeCode)) {
+        query.establishments = {
+          $in: [new ObjectId(storeCode)]
+        }
+      }
+      if (Validators.checkField(group_user)) {
+        query.group_user = group_user;
+      }
+      if (Validators.checkField(username)) {
+        query.username = username;
+      }
+      req.query = Users.find(query).select({
         pass: 0
       }).populate("establishments");
       next();
@@ -101,16 +125,16 @@ class UserController {
 
   static async authenticate(req, res, next) {
     try {
-      let body = req.body;
-      if (!Validators.checkField(body.email)) {
-        return ApiResponse.parameterNotFound('email').sendResponse(res);
+      const {email, password} = req.body;
+      if (!Validators.checkField(email)) {
+        throw new InvalidParameters("email");
       }
-      if (!Validators.checkField(body.password)) {
+      if (!Validators.checkField(password)) {
         return ApiResponse.parameterNotFound('password').sendResponse(res);
       }
-      const hashPass = new PassGenerator(body.password).build();
+      const hashPass = new PassGenerator(password).build();
       let users = await Users.findOne({
-        email: body.email,
+        email: email,
         pass: hashPass,
       }).select({
         pass: 0
@@ -118,7 +142,7 @@ class UserController {
       if (!users) {
         throw new NotFoundError("Dados incorretos ou inválidos.")
       } else {
-        const token = TokenGenerator.generate(body.email);
+        const token = TokenGenerator.generate(email);
         res.set("Authorization", token);
         res.set("Access-Control-Expose-Headers", "*");
         return ApiResponse.returnSucess(users).sendResponse(res);
