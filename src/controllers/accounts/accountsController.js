@@ -61,7 +61,7 @@ class AccountsController {
         }
     }
 
-    static async closeAccount(req, res, next) {
+    static async manageStatus(req, res, next) {
         try {
             const {id, status} = req.body;
             if (!Validators.checkField(id)) {

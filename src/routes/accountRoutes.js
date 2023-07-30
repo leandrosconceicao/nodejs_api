@@ -10,6 +10,6 @@ router
     .get(Endpoints.accounts, AccountsController.findAll, paginationAndFilters)
     .get(`${Endpoints.accounts}/:id`, AccountsController.findOne)
     .post(Endpoints.accounts, validateToken, AccountsController.post)
-    .put(`${Endpoints.accounts}/change_status`, validateToken, AccountsController.closeAccount)
+    .put(`${Endpoints.accounts}/manage_status`, validateToken, AccountsController.manageStatus)
 
 export default router;

@@ -7,6 +7,7 @@ import NotFoundError from "../errors/NotFoundError.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
 import PeriodGenerator from "../../utils/periodGenerator.js";
 import mongoose from "mongoose";
+import Payments from "../../models/Payments.js";
 var ObjectId = mongoose.Types.ObjectId;
 
 class OrdersController {
@@ -14,13 +15,13 @@ class OrdersController {
     try {
       let id = req.params.pedidosId;
       const query = await Orders.findById(id)
-        .populate('client')
-        .populate('accountId', ['-payments', '-orders'])
-        .populate('userCreate', ['-establishments', '-pass'])
-        // .populate('payment')
-        // .populate('payment.userCreate', ['-establishments', '-pass']);
+        .populate("client")
+        .populate("accountId", ["-payments", "-orders"])
+        .populate("userCreate", ["-establishments", "-pass"]);
+      // .populate('payment')
+      // .populate('payment.userCreate', ['-establishments', '-pass']);
       if (!query) {
-        throw new NotFoundError('Pedido não encontrado');
+        throw new NotFoundError("Pedido não encontrado");
       } else {
         ApiResponse.returnSucess(query).sendResponse(res);
       }
@@ -32,26 +33,28 @@ class OrdersController {
   static async findAll(req, res, next) {
     try {
       const {
-        isPreparation, 
-        type, 
-        from, 
-        to, 
-        id, 
+        isPreparation,
+        type,
+        from,
+        to,
+        id,
         clientId,
         paymentId,
         accountId,
         status,
         saller,
         accepted,
-        storeCode
+        storeCode,
       } = req.query;
-      let or = {}
+      let or = {};
       if (!Validators.checkField(storeCode)) {
         throw new InvalidParameter("storeCode");
       }
       or.storeCode = new ObjectId(storeCode);
       if (Validators.checkField(isPreparation)) {
-        or.products = {$elemMatch: {"setupIsFinished": false, "needsPreparation": true}}
+        or.products = {
+          $elemMatch: { setupIsFinished: false, needsPreparation: true },
+        };
       }
       if (Validators.checkField(type)) {
         or.orderType = type;
@@ -81,9 +84,9 @@ class OrdersController {
         or.payment = new ObjectId(paymentId);
       }
       req.query = Orders.find(or)
-      .populate('client')
-      .populate('accountId', ['-payments', '-orders'])
-      .populate('userCreate', ['-establishments', '-pass'])
+        .populate("client")
+        .populate("accountId", ["-payments", "-orders"])
+        .populate("userCreate", ["-establishments", "-pass"]);
       // .populate('payment')
       // .populate('payment.userCreate', ['-establishments', '-pass']);
       next();
@@ -93,7 +96,7 @@ class OrdersController {
   }
 
   static async post(req, res, next) {
-    try { 
+    try {
       let body = req.body;
       if (!Validators.checkField(body.storeCode)) {
         throw new InvalidParameter("storeCode");
@@ -107,24 +110,26 @@ class OrdersController {
         let or = await order.save();
         await OrdersController.updateId(or);
         const newOrder = await Orders.findById(or.id)
-        .populate('client')
-        .populate('accountId', ['-payments', '-orders'])
-        .populate('userCreate', ['-establishments', '-pass'])
+          .populate("client")
+          .populate("accountId", ["-payments", "-orders"])
+          .populate("userCreate", ["-establishments", "-pass"]);
         // .populate('payment')
         // .populate('payment.userCreate', ['-establishments', '-pass']);
         ApiResponse.returnSucess(newOrder).sendResponse(res);
       }
     } catch (e) {
-      next(e)
+      next(e);
     }
   }
 
-
   static async getOrders(id) {
-    const data = await Orders.find({accountId: new ObjectId(id), status: {$ne: "cancelled"}})
-      .populate('client')
-      .populate('accountId', ['-payments', '-orders'])
-      .populate('userCreate', ['-establishments', '-pass']);
+    const data = await Orders.find({
+      accountId: new ObjectId(id),
+      status: { $ne: "cancelled" },
+    })
+      .populate("client")
+      .populate("accountId", ["-payments", "-orders"])
+      .populate("userCreate", ["-establishments", "-pass"]);
     return data;
   }
 
@@ -136,40 +141,40 @@ class OrdersController {
     } else {
       count = counter[0].seq_value + 1;
     }
-    await Orders.findByIdAndUpdate(order.id, {"pedidosId": count});
-    await Counter.updateMany({}, {"seq_value": count})
+    await Orders.findByIdAndUpdate(order.id, { pedidosId: count });
+    await Counter.updateMany({}, { seq_value: count });
   }
 
   static async pushNewItems(req, res, next) {
     try {
-      let {id, orders} = req.body;
+      let { id, orders } = req.body;
       if (!Validators.checkField(id)) {
         return ApiResponse.parameterNotFound("id").sendResponse(res);
       }
       if (!Validators.checkField(orders)) {
         return ApiResponse.parameterNotFound("orders").sendResponse(res);
       }
-      const order = await Orders.findByIdAndUpdate(
-        id, {$push: { products: orders }}
-      );
+      const order = await Orders.findByIdAndUpdate(id, {
+        $push: { products: orders },
+      });
       return ApiResponse.returnSucess(order).sendResponse(res);
     } catch (e) {
-      return next(e)
+      return next(e);
     }
   }
 
   static async addPayment(req, res, next) {
     try {
-      const {id, data} = req.body;
+      const { id, data } = req.body;
       if (!Validators.checkField(id)) {
-        return ApiResponse.parameterNotFound('id').sendResponse(res);
+        return ApiResponse.parameterNotFound("id").sendResponse(res);
       }
       if (!Validators.checkField(data)) {
-        return ApiResponse.parameterNotFound('data').sendResponse(res);
+        return ApiResponse.parameterNotFound("data").sendResponse(res);
       }
       data.createDate = new Date();
       await Orders.findByIdAndUpdate(id, {
-        payment: data
+        payment: data,
       });
       return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
@@ -177,37 +182,59 @@ class OrdersController {
     }
   }
 
-  static async update(req, res, next) {
+  static async cancelOrder(req, res, next) {
     try {
-      let query = req.body.query
-      let data = req.body.data;
-      if (!Validators.checkField(query)) {
-        ApiResponse.parameterNotFound('(query)').sendResponse(res);
-      } else if (!Validators.checkField(data)) {
-        ApiResponse.parameterNotFound('(data)').sendResponse(res);
-      } else {
-        const update = await Orders.updateMany(query, {$set: data})
-        if (!update) {
-          ApiResponse.returnError('Nenhum dado atualizado, verifique os filtros').sendResponse(res);
-        } else {
-          ApiResponse.returnSucess().sendResponse(res);
-        }
+      const id = req.body;
+      if (!Validators.checkField(id)) {
+        throw new InvalidParameter("id");
       }
+      const orderUpdate = await Orders.findByIdAndUpdate(new ObjectId(id), {
+        status: "cancelled",
+        isPayed: false,
+      });
+      await Payments.findByIdAndDelete(orderUpdate.payment);
+      return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
-      return next(e)
+      next(e);
     }
   }
+
+  // static async update(req, res, next) {
+  //   try {
+  //     let query = req.body.query
+  //     let data = req.body.data;
+  //     if (!Validators.checkField(query)) {
+  //       ApiResponse.parameterNotFound('(query)').sendResponse(res);
+  //     } else if (!Validators.checkField(data)) {
+  //       ApiResponse.parameterNotFound('(data)').sendResponse(res);
+  //     } else {
+  //       const update = await Orders.updateMany(query, {$set: data})
+  //       if (!update) {
+  //         ApiResponse.returnError('Nenhum dado atualizado, verifique os filtros').sendResponse(res);
+  //       } else {
+  //         ApiResponse.returnSucess().sendResponse(res);
+  //       }
+  //     }
+  //   } catch (e) {
+  //     return next(e)
+  //   }
+  // }
 
   static async setPreparation(req, res, next) {
     try {
       let query = req.body;
       if (!Validators.checkField(query.id)) {
-        ApiResponse.parameterNotFound('id').sendResponse(res);
+        ApiResponse.parameterNotFound("id").sendResponse(res);
       }
-      if (!Validators.checkField(query.isReady) && !Validators.checkType(query.isReady, 'boolean')) {
-        ApiResponse.parameterNotFound('isReady').sendResponse(res);
+      if (
+        !Validators.checkField(query.isReady) &&
+        !Validators.checkType(query.isReady, "boolean")
+      ) {
+        ApiResponse.parameterNotFound("isReady").sendResponse(res);
       }
-      await Orders.findByIdAndUpdate(query.id, {"products.$[].setupIsFinished": query.isReady})
+      await Orders.findByIdAndUpdate(query.id, {
+        "products.$[].setupIsFinished": query.isReady,
+      });
       ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
       return next(e);
