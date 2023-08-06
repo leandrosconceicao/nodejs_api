@@ -54,7 +54,10 @@ class OrdersController {
       if (Validators.checkField(isPreparation)) {
         or.products = {
           $elemMatch: { setupIsFinished: false, needsPreparation: true },
-        };
+        };        
+        or.status = {
+          $nin: ["cancelled", "finished"]
+        }
       }
       if (Validators.checkField(type)) {
         or.orderType = type;
@@ -77,7 +80,7 @@ class OrdersController {
       if (Validators.checkField(accepted)) {
         or.accepted = accepted;
       }
-      if (Validators.checkField(status)) {
+      if (Validators.checkField(status) && !isPreparation) {
         or.status = status;
       }
       if (Validators.checkField(paymentId)) {
