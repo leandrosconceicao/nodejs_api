@@ -23,7 +23,7 @@ class ReportsControllers {
         query.createDate = new PeriodGenerator(from, to).buildQuery();
       }
       if (Validators.checkField(saller)) {
-        query.userCreate = saller;
+        query.userCreate = new ObjectId(saller);
       }
       if (Validators.checkField(type)) {
         query.orderType = type;
@@ -113,7 +113,7 @@ class ReportsControllers {
         query.createDate = new PeriodGenerator(from, to).buildQuery();
       }
       if (Validators.checkField(saller)) {
-        query.userCreate = saller;
+        query.userCreate = new ObjectId(saller);
       }
       if (Validators.checkField(type)) {
         query.orderType = type;
