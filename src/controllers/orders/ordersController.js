@@ -227,15 +227,13 @@ class OrdersController {
     try {
       let query = req.body;
       if (!Validators.checkField(query.id)) {
-        ApiResponse.parameterNotFound("id").sendResponse(res);
+        throw new InvalidParameter("id");
       }
-      if (
-        !Validators.checkField(query.isReady) &&
-        !Validators.checkType(query.isReady, "boolean")
-      ) {
-        ApiResponse.parameterNotFound("isReady").sendResponse(res);
+      if (!Validators.checkField(query.isReady) && !Validators.checkType(query.isReady, "boolean")) {
+        throw new InvalidParameter("isReady");
       }
       await Orders.findByIdAndUpdate(query.id, {
+        status: "finished",
         "products.$[].setupIsFinished": query.isReady,
       });
       ApiResponse.returnSucess().sendResponse(res);
