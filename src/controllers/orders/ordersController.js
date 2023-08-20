@@ -69,7 +69,8 @@ class OrdersController {
         or._id = id;
       }
       if (Validators.checkField(clientId)) {
-        or.client._id = clientId;
+        or.client = {};
+        or.client._id = new ObjectId(clientId);
       }
       if (Validators.checkField(accountId)) {
         or.accountId = accountId;
