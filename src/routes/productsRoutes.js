@@ -7,7 +7,7 @@ import paginationAndFilters from '../middlewares/paginationAndFilters.js';
 const router = express.Router();
 
 router
-    .get(endpoints.products, validateToken, ProductController.findAll, paginationAndFilters)
+    .get(endpoints.products, ProductController.findAll, paginationAndFilters)
     .get(`${endpoints.products}/:id`, validateToken, ProductController.findOne)
     .post(endpoints.products, validateToken, ProductController.addProduct)
     .put(endpoints.products, validateToken, ProductController.update)
