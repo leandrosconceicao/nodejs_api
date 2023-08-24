@@ -31,7 +31,7 @@ class ClientController {
       } else {
         ApiResponse.badRequest(
           "Usuário inválido ou não encontrado, verifique os dados e tente novamente."
-        ).sendResponse;
+        ).sendResponse(res);
       }
     } catch (e) {
       next(e);
