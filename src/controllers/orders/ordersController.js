@@ -107,7 +107,7 @@ class OrdersController {
       } else {
         let order = new Orders(body);
         order.createDate = new Date();
-        if (!Validators.checkField(body.accountId)) {
+        if (Validators.checkField(body.orderType) && body.orderType == "frontDesk") {
           const payment = await PaymentController.savePayment(body.payment);
           order.payment = payment._id;
         }
