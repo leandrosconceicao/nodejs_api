@@ -66,7 +66,7 @@ const ordersSchema = new mongoose.Schema({
   },
   observations: { type: String },
   userCreate: {
-    type: ObjectId, ref: "users", required: [true, "Parametro (storeCode) é obrigatório"]
+    type: ObjectId, ref: "users", required: [true, "Parametro (userCreate) é obrigatório"]
   },
   storeCode: {type: mongoose.Types.ObjectId, ref: "establishments" , required: [true, "Parametro (storeCode) é obrigatório"]},
   payment: {
