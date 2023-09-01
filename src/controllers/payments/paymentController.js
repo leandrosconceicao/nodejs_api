@@ -65,6 +65,21 @@ class PaymentController {
         }
     }
 
+    async rollbackPayments(req, res, next) {
+        try {
+            const {payments} = req.body;
+            if (!Validators.checkField(payments)) {
+                throw new InvalidParameters("payments");
+            }
+            await Payments.deleteMany({
+                _id: {"$in": payments}
+            });
+            return ApiResponse.returnSucess().sendResponse(res);
+        } catch (e) {
+            next(e);
+        }
+    }
+
     static async savePayment(paymentData) {
         const payment = new Payments(paymentData);
         payment.createDate = new Date();

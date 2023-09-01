@@ -12,7 +12,7 @@ router
     .get(Endpoints.payments, validateToken, paymentControl.findAll, paginationAndFilters)
     .get(`${Endpoints.payments}/:id`, validateToken, paymentControl.findOne)
     .post(Endpoints.payments, validateToken, paymentControl.add)
-    .delete(Endpoints.payments, validateToken, paymentControl.delete)
+    .delete(Endpoints.payments, validateToken, paymentControl.rollbackPayments)
     // .patch(Endpoints.paymentForms, paymentControl.addNewForm)
     // .delete(Endpoints.paymentForms, paymentControl.del)
 
