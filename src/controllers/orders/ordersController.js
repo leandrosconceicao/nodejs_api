@@ -234,7 +234,7 @@ class OrdersController {
         throw new InvalidParameter("isReady");
       }
       await Orders.findByIdAndUpdate(query.id, {
-        status: "finished",
+        status: query.isReady ? "finished" : "pending",
         "products.$[].setupIsFinished": query.isReady,
       });
       ApiResponse.returnSucess().sendResponse(res);
