@@ -167,6 +167,24 @@ class OrdersController {
     }
   }
 
+  static async pullItem(req, res, next) {
+    try {
+      const {id, item} = req.body;
+      if (!Validators.checkField(id)) {
+        throw new InvalidParameter("id");
+      }
+      if (!Validators.checkField(item)) {
+        throw new InvalidParameter("item");
+      }
+      await Orders.findByIdAndUpdate(id, {
+        $pull: {products: item}
+      })
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
   static async addPayment(req, res, next) {
     try {
       const { id, data } = req.body;
