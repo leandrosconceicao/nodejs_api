@@ -169,15 +169,15 @@ class OrdersController {
 
   static async pullItem(req, res, next) {
     try {
-      const {id, item} = req.body;
+      const {id, item_id} = req.body;
       if (!Validators.checkField(id)) {
         throw new InvalidParameter("id");
       }
-      if (!Validators.checkField(item)) {
-        throw new InvalidParameter("item");
+      if (!Validators.checkField(item_id)) {
+        throw new InvalidParameter("item_id");
       }
       await Orders.findByIdAndUpdate(id, {
-        $pull: {products: item}
+        $pull: {products: {_id: item_id}}
       })
       return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
