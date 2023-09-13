@@ -177,7 +177,7 @@ class OrdersController {
         throw new InvalidParameter("item");
       }
       await Orders.findByIdAndUpdate(id, {
-        $pull: {products: item}
+        $pull: {products: {_id: item._id}}
       })
       return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
