@@ -9,6 +9,7 @@ import addOnes from './addOnesRoutes.js';
 import orders from './ordersRoutes.js';
 import ApiResponse from "../models/ApiResponse.js";
 import events from "./eventsRoutes.js";
+import firebase from "./firebaseRoutes.js";
 import validation from "./validationsRoutes.js";
 import queue from './queueRoutes.js';
 import apps from './appsRoutes.js';
@@ -37,6 +38,7 @@ const router = (app) => {
         orders,
         accounts,
         events,
+        firebase,
         validation,
         queue,
         apps,
