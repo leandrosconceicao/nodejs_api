@@ -16,5 +16,6 @@ router
     .patch(`${Endpoints.orders}/items`, validateToken, OrdersController.pushNewItems)
     .patch(`${Endpoints.orders}/pull_item`, validateToken, OrdersController.pullItem)
     .patch(`${Endpoints.orders}/payments`, validateToken, OrdersController.addPayment)
+    .patch(`${Endpoints.orders}/change_seller`, validateToken, OrdersController.changeSeller)
 
 export default router;
