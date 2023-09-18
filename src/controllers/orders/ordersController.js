@@ -1,6 +1,7 @@
 import Validators from "../../utils/utils.js";
 import Orders from "../../models/Orders.js";
 import ApiResponse from "../../models/ApiResponse.js";
+import Users from "../../models/Users.js";
 import Counter from "../base/Counters.js";
 import PaymentController from "../payments/paymentController.js";
 import NotFoundError from "../errors/NotFoundError.js";
@@ -8,6 +9,7 @@ import InvalidParameter from "../errors/InvalidParameter.js";
 import PeriodGenerator from "../../utils/periodGenerator.js";
 import mongoose from "mongoose";
 import Payments from "../../models/Payments.js";
+import Notifications from "../../controllers/firebase/notifications.js";
 var ObjectId = mongoose.Types.ObjectId;
 
 class OrdersController {
@@ -242,23 +244,52 @@ class OrdersController {
   //   }
   // }
 
+  static async changeSeller(req, res, next) {
+    try {
+      const {orderId, userTo} = req.body;
+      if (!Validators.checkField(orderId)) {
+        throw new InvalidParameter("orderId");
+      }
+      if (!Validators.checkField(userTo)) {
+        throw new InvalidParameter("userTo");
+      }
+      await Orders.findByIdAndUpdate(orderId, {
+        userCreate: userTo
+      });
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
   static async setPreparation(req, res, next) {
     try {
-      let query = req.body;
-      if (!Validators.checkField(query.id)) {
+      const {id, isReady} = req.body;
+      if (!Validators.checkField(id)) {
         throw new InvalidParameter("id");
       }
-      if (!Validators.checkField(query.isReady) && !Validators.checkType(query.isReady, "boolean")) {
+      if (!Validators.checkField(isReady) && !Validators.checkType(isReady, "boolean")) {
         throw new InvalidParameter("isReady");
       }
-      await Orders.findByIdAndUpdate(query.id, {
-        status: query.isReady ? "finished" : "pending",
-        "products.$[].setupIsFinished": query.isReady,
+      const process = await Orders.findByIdAndUpdate(id, {
+        status: isReady ? "finished" : "pending",
+        "products.$[].setupIsFinished": isReady,
       });
+      if (isReady) {
+        await alertUser(process);
+      }
       ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
       return next(e);
     }
+  }
+}
+
+async function alertUser(order) {
+  const user = await Users.findById(order.userCreate);
+  const token = user.token;
+  if (token) {
+    await Notifications.sendTo(token, "Alerta de pedido", `Pedido ${order.pedidosId} está pronto.`)  
   }
 }
 
