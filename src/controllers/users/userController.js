@@ -125,7 +125,7 @@ class UserController {
 
   static async authenticate(req, res, next) {
     try {
-      const {email, password} = req.body;
+      const {email, password, token} = req.body;
       if (!Validators.checkField(email)) {
         throw new InvalidParameters("email");
       }
@@ -142,15 +142,24 @@ class UserController {
       if (!users) {
         throw new NotFoundError("Dados incorretos ou inválidos.")
       } else {
-        const token = TokenGenerator.generate(email);
-        res.set("Authorization", token);
+        const authToken = TokenGenerator.generate(email);
+        res.set("Authorization", authToken);
         res.set("Access-Control-Expose-Headers", "*");
+        if (token && users.token != token) {
+          await updateUserToken(users.id, token)
+        }
         return ApiResponse.returnSucess(users).sendResponse(res);
       }
     } catch (e) {
       next(e);
     }
   }
+}
+
+async function updateUserToken(id, token) {
+  await Users.findByIdAndUpdate(id, {
+    "token": token
+  })
 }
 
 export default UserController;
