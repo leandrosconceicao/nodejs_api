@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import orders_products_schema from "./orders/orders_products.js";
 var ObjectId = mongoose.Types.ObjectId;
 
 const ordersSchema = new mongoose.Schema({
@@ -15,7 +16,7 @@ const ordersSchema = new mongoose.Schema({
       message: "O tipo {VALUE} não é um valor permitido"
     }
   },
-  accepted: { type: Boolean , default: undefined},
+  accepted: { type: Boolean , default: null},
   status: {
     type: "String",
     default: "pending",
@@ -26,27 +27,7 @@ const ordersSchema = new mongoose.Schema({
   },
   products: {
     type: [
-      new mongoose.Schema({
-        quantity: Number,
-        productName: String,
-        productId: ObjectId,
-        orderDescription: String,
-        category: String,
-        needsPreparation: Boolean,
-        setupIsFinished: Boolean,
-        unitPrice: Number,
-        addOnes: {
-          type: [
-            {
-              addOneName: String,
-              quantity: Number,
-              name: String,
-              price: Number,
-            },
-          ],
-          default: undefined,
-        },
-      }),
+      orders_products_schema
     ],
   },
   isPayed: { type: Boolean , default: false},
@@ -64,7 +45,7 @@ const ordersSchema = new mongoose.Schema({
     zipCode: String,
     versionKey: false,
   },
-  observations: { type: String },
+  observations: { type: String , default: ""},
   userCreate: {
     type: ObjectId, ref: "users", required: [true, "Parametro (userCreate) é obrigatório"]
   },
