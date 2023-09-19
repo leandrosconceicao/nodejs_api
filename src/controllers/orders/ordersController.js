@@ -106,23 +106,25 @@ class OrdersController {
       let body = req.body;
       if (!Validators.checkField(body.storeCode)) {
         throw new InvalidParameter("storeCode");
-      } else {
-        let order = new Orders(body);
-        order.createDate = new Date();
-        if (Validators.checkField(body.orderType) && body.orderType == "frontDesk") {
-          const payment = await PaymentController.savePayment(body.payment);
-          order.payment = payment._id;
-        }
-        let or = await order.save();
-        await OrdersController.updateId(or);
-        const newOrder = await Orders.findById(or.id)
-          .populate("client")
-          .populate("accountId", ["-payments", "-orders"])
-          .populate("userCreate", ["-establishments", "-pass"]);
-        // .populate('payment')
-        // .populate('payment.userCreate', ['-establishments', '-pass']);
-        ApiResponse.returnSucess(newOrder).sendResponse(res);
       }
+      if (!Validators.checkField(body.products)) {
+        throw new InvalidParameter("products");
+      }
+      let order = new Orders(body);
+      order.createDate = new Date();
+      if (Validators.checkField(body.orderType) && body.orderType == "frontDesk") {
+        const payment = await PaymentController.savePayment(body.payment);
+        order.payment = payment._id;
+      }
+      let or = await order.save();
+      await OrdersController.updateId(or);
+      const newOrder = await Orders.findById(or.id)
+        .populate("client")
+        .populate("accountId", ["-payments", "-orders"])
+        .populate("userCreate", ["-establishments", "-pass"]);
+      // .populate('payment')
+      // .populate('payment.userCreate', ['-establishments', '-pass']);
+      ApiResponse.returnSucess(newOrder).sendResponse(res);
     } catch (e) {
       next(e);
     }
@@ -145,10 +147,16 @@ class OrdersController {
     if (!counter.length) {
       count += 1;
     } else {
-      count = counter[0].seq_value + 1;
+      const value = counter[0];
+      const now = new Date();
+      if (value.createDate.toLocaleDateString() !== now.toLocaleDateString()) {
+        count += 1;
+      } else {
+        count = value.seq_value + 1;
+      }
     }
     await Orders.findByIdAndUpdate(order.id, { pedidosId: count });
-    await Counter.updateMany({}, { seq_value: count });
+    await Counter.updateMany({}, { seq_value: count, createDate: new Date()});
   }
 
   static async pushNewItems(req, res, next) {
