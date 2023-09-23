@@ -44,7 +44,7 @@ class OrdersController {
         paymentId,
         accountId,
         status,
-        saller,
+        userCreate,
         accepted,
         storeCode,
       } = req.query;
@@ -77,8 +77,8 @@ class OrdersController {
       if (Validators.checkField(accountId)) {
         or.accountId = accountId;
       }
-      if (Validators.checkField(saller)) {
-        or.saller = saller;
+      if (Validators.checkField(userCreate)) {
+        or.userCreate = new ObjectId(userCreate);
       }
       if (Validators.checkField(accepted)) {
         or.accepted = accepted;
@@ -156,7 +156,9 @@ class OrdersController {
       }
     }
     await Orders.findByIdAndUpdate(order.id, { pedidosId: count });
-    await Counter.updateMany({}, { seq_value: count, createDate: new Date()});
+    await Counter.updateMany({}, { seq_value: count, createDate: new Date()}, {
+      upsert: true
+    });
   }
 
   static async pushNewItems(req, res, next) {
@@ -282,7 +284,11 @@ class OrdersController {
       const process = await Orders.findByIdAndUpdate(id, {
         status: isReady ? "finished" : "pending",
         "products.$[].setupIsFinished": isReady,
-      });
+      }, {
+        new: true
+      }).populate("client")
+        .populate("accountId", ["-payments", "-orders"])
+        .populate("userCreate", ["-establishments", "-pass"]).lean();
       if (isReady) {
         await alertUser(process);
       }
@@ -294,10 +300,16 @@ class OrdersController {
 }
 
 async function alertUser(order) {
-  const user = await Users.findById(order.userCreate);
-  const token = user.token;
-  if (token) {
-    await Notifications.sendTo(token, "Alerta de pedido", `Pedido ${order.pedidosId} está pronto.`)  
+  const isAccount = order.orderType == "account";
+  if (isAccount) {
+    const msg = `Pedido ${order.pedidosId} da conta (${order.accountId.description}) está pronto.`;
+    const user = await Users.findById(order.userCreate);
+    const token = user.token;
+    if (token) {
+      await Notifications.sendTo(token, "Alerta de pedido", msg, {
+        "id": order._id.toString()
+      })  
+    }
   }
 }
 
