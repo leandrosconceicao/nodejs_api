@@ -1,4 +1,5 @@
 import Validators from "../../utils/utils.js";
+import TelegramApi from "../../controllers/telegram/telegramController.js";
 import Orders from "../../models/Orders.js";
 import ApiResponse from "../../models/ApiResponse.js";
 import Users from "../../models/Users.js";
@@ -9,8 +10,9 @@ import InvalidParameter from "../errors/InvalidParameter.js";
 import PeriodGenerator from "../../utils/periodGenerator.js";
 import mongoose from "mongoose";
 import Payments from "../../models/Payments.js";
-import Notifications from "../../controllers/firebase/notifications.js";
 var ObjectId = mongoose.Types.ObjectId;
+
+const telegramApi = new TelegramApi();
 
 class OrdersController {
   static async findOne(req, res, next) {
@@ -121,9 +123,12 @@ class OrdersController {
       const newOrder = await Orders.findById(or.id)
         .populate("client")
         .populate("accountId", ["-payments", "-orders"])
-        .populate("userCreate", ["-establishments", "-pass"]);
+        .populate("userCreate", ["-establishments", "-pass"]).lean();
       // .populate('payment')
       // .populate('payment.userCreate', ['-establishments', '-pass']);
+      if (newOrder.accountId) {
+        telegramApi.notifyUsers(`<b><i>${newOrder.userCreate.username}</i></b> realizou um novo pedido para a conta (<b>${newOrder.accountId.description}</b>)`)
+      }
       ApiResponse.returnSucess(newOrder).sendResponse(res);
     } catch (e) {
       next(e);
@@ -290,7 +295,7 @@ class OrdersController {
         .populate("accountId", ["-payments", "-orders"])
         .populate("userCreate", ["-establishments", "-pass"]).lean();
       if (isReady) {
-        await alertUser(process);
+        alertUser(process);
       }
       ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
@@ -302,13 +307,14 @@ class OrdersController {
 async function alertUser(order) {
   const isAccount = order.orderType == "account";
   if (isAccount) {
-    const msg = `Pedido ${order.pedidosId} da conta (${order.accountId.description}) está pronto.`;
     const user = await Users.findById(order.userCreate);
     const token = user.token;
+    const msg = `${user.username}, pedido ${order.pedidosId} da conta (${order.accountId.description}) está pronto.`;
     if (token) {
-      await Notifications.sendTo(token, "Alerta de pedido", msg, {
-        "id": order._id.toString()
-      })  
+      telegramApi.notifyUsers(msg);
+      // await Notifications.sendTo(token, "Alerta de pedido", msg, {
+      //   "id": order._id.toString()
+      // })  
     }
   }
 }
