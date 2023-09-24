@@ -10,7 +10,7 @@ import InvalidParameter from '../controllers/errors/InvalidParameter.js';
 function errorCatcher(err, req, res, next) {
     console.error(err);
     if (err instanceof mongoose.Error.CastError) {
-        return ApiResponse.badRequest().sendResponse(res)
+        return ApiResponse.badRequest(err.message).sendResponse(res)
     } 
     if (err instanceof mongoose.Error.ValidationError) {
         return new ValidationError(err).sendResponse(res);
