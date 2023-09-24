@@ -10,7 +10,7 @@ var ObjectId = mongoose.Types.ObjectId;
 class PaymentController {
     async findAll(req, res, next) {
         try {
-            const {storeCode, userCreate, to, from} = req.query;
+            const {storeCode, userCreate, to, from, type} = req.query;
             const query = {};
             if (!Validators.checkField(storeCode)) {
                 throw new InvalidParameters("storeCode");
@@ -22,6 +22,11 @@ class PaymentController {
             }
             if (Validators.checkField(userCreate)) {
                 query.userCreate = userCreate;
+            }
+            if (Validators.checkField(type)) {
+                query.value = {
+                    form: type
+                }
             }
             req.query = Payments.find(query).populate('userCreate', ["-establishments", "-pass"]);
             next();
