@@ -26,9 +26,8 @@ class OrdersController {
       // .populate('payment.userCreate', ['-establishments', '-pass']);
       if (!query) {
         throw new NotFoundError("Pedido não encontrado");
-      } else {
-        ApiResponse.returnSucess(query).sendResponse(res);
       }
+      ApiResponse.returnSucess(query).sendResponse(res);
     } catch (e) {
       next(e);
     }
@@ -308,14 +307,8 @@ async function alertUser(order) {
   const isAccount = order.orderType == "account";
   if (isAccount) {
     const user = await Users.findById(order.userCreate);
-    const token = user.token;
-    const msg = `${user.username}, pedido ${order.pedidosId} da conta (${order.accountId.description}) está pronto.`;
-    if (token) {
-      telegramApi.notifyUsers(msg);
-      // await Notifications.sendTo(token, "Alerta de pedido", msg, {
-      //   "id": order._id.toString()
-      // })  
-    }
+    const msg = `<b><i>${user.username}</i></b>, pedido <b>${order.pedidosId}</b> da conta (<b>${order.accountId.description}</b>) está pronto.`;
+    telegramApi.notifyUsers(msg);
   }
 }
 
