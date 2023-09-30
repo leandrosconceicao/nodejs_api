@@ -6,6 +6,7 @@ import NotFoundError from "../errors/NotFoundError.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
 import PaymentController from "../payments/paymentController.js";
 import mongoose from "mongoose";
+import TelegramApi from "../telegram/telegramController.js";
 var ObjectId = mongoose.Types.ObjectId;
 class AccountsController {
     static async findAll(req, res, next) {
@@ -35,15 +36,7 @@ class AccountsController {
             if (!Validators.checkField(id)) {
                 throw new InvalidParameter('id');
             }
-            let account = await Accounts.findById(id)
-                .populate("client").lean();
-            if (!account) {
-                throw new NotFoundError("Conta não localizada");
-            }
-            const orders = await OrdersController.getOrders(id);
-            const payments = await PaymentController.getPayments(id);
-            account.orders = orders;
-            account.payments = payments;
+            const account = await getAccountData(id);
             return ApiResponse.returnSucess(account).sendResponse(res);
         } catch (e) {
             next(e);
@@ -71,11 +64,57 @@ class AccountsController {
                 throw new InvalidParameter("status");
             }
             await Accounts.findByIdAndUpdate(new ObjectId(id), {status: status});
+            if (status === "checkSolicitation") {
+                sendAccountOrders(id);
+            }
             return ApiResponse.returnSucess().sendResponse(res);
         } catch (e) {
             next(e);
         }
     }
+}
+
+async function sendAccountOrders(id) {
+    try {
+        const account = await getAccountData(id);
+        if (!account) {
+            return;
+        }
+        if (!account.orders.length) {
+            return;
+        }
+        const telApi = new TelegramApi();
+        await telApi.notifyUsers(prepareAccountData(account));
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+function prepareAccountData(account) {
+    let data = "";
+    let products = account.orders.map((e) => `${e.products.map((prod) => `(${prod.quantity} x R$ ${prod.unitPrice}) ${prod.productName} = R$ ${prod.quantity * prod.unitPrice}\n`)}\n\n`)
+    // let payments = account.payments.map((e) => `(${e.value.form}) - R$ ${e.value.value}\n`);
+    data += `<b>EXTRATO DA CONTA: ${account.description}</b>\n`
+    data += products;
+    let total = account.orders.map((e) => e.products.map((el) => el.unitPrice * el.quantity).reduce((total, current) => total + current, 0))
+    data += `Total: R$ ${total.reduce((total, current) => total + current, 0)}`
+    // if (payments.length) {
+    //     data += payments
+    // }
+    return data;
+}
+
+async function getAccountData(id) {
+    let account = await Accounts.findById(id)
+                .populate("client").lean();
+    if (!account) {
+        throw new NotFoundError("Conta não localizada");
+    }
+    const orders = await OrdersController.getOrders(id);
+    const payments = await PaymentController.getPayments(id);
+    account.orders = orders;
+    account.payments = payments;
+    return account;
 }
 
 export default AccountsController;
