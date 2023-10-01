@@ -125,9 +125,9 @@ class OrdersController {
         .populate("userCreate", ["-establishments", "-pass"]).lean();
       // .populate('payment')
       // .populate('payment.userCreate', ['-establishments', '-pass']);
-      if (newOrder.accountId) {
-        telegramApi.notifyUsers(`<b><i>${newOrder.userCreate.username}</i></b> realizou um novo pedido para a conta (<b>${newOrder.accountId.description}</b>)`)
-      }
+      // if (newOrder.accountId) {
+      //   telegramApi.notifyUsers(`<b><i>${newOrder.userCreate.username}</i></b> realizou um novo pedido para a conta (<b>${newOrder.accountId.description}</b>)`)
+      // }
       ApiResponse.returnSucess(newOrder).sendResponse(res);
     } catch (e) {
       next(e);
