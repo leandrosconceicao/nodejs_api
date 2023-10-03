@@ -11,7 +11,7 @@ var ObjectId = mongoose.Types.ObjectId;
 class AccountsController {
     static async findAll(req, res, next) {
         try {
-            const {storeCode, status, from, to} = req.query;
+            const {storeCode, status, from, to, created_by} = req.query;
             let query = {};
             if (Validators.checkField(storeCode)) {
                 query.storeCode = storeCode;
@@ -21,6 +21,9 @@ class AccountsController {
             }
             if (Validators.checkField(from) && Validators.checkField(to)) {
                 query.createDate = {$gte: new Date(from), $lte: new Date(to)};
+            }
+            if (Validators.checkField(created_by)) {
+                query.created_by = new ObjectId(created_by)
             }
             req.query = Accounts.find(query)
                 .populate("client");
