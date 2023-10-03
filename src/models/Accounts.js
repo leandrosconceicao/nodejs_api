@@ -16,6 +16,9 @@ const accountsSchema = new mongoose.Schema({
     },
     client: {
         type: ObjectId, ref: 'clients', required: [true, "Parametro (client) é obrigatório"]
+    },
+    created_by: {
+        type: ObjectId, ref: 'users', required: [true, "Parametro (created_by) é obrigatório"]
     }
 })
 
