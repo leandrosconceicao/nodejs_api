@@ -10,6 +10,7 @@ import InvalidParameter from "../errors/InvalidParameter.js";
 import PeriodGenerator from "../../utils/periodGenerator.js";
 import mongoose from "mongoose";
 import Payments from "../../models/Payments.js";
+import AccountsController from "../accounts/accountsController.js";
 var ObjectId = mongoose.Types.ObjectId;
 
 const telegramApi = new TelegramApi();
@@ -116,6 +117,12 @@ class OrdersController {
       if (Validators.checkField(body.orderType) && body.orderType == "frontDesk") {
         const payment = await PaymentController.savePayment(body.payment);
         order.payment = payment._id;
+      }
+      if (body.accountId) {
+        const canReceiveNewOrder = await AccountsController.canReceiveNewOrder(body.accountId);
+        if (!canReceiveNewOrder) {
+          return ApiResponse.badRequest("Conta não pode receber pedidos pois não está com o status de (ABERTA).").sendResponse(res);
+        }
       }
       let or = await order.save();
       await OrdersController.updateId(or);
@@ -229,6 +236,7 @@ class OrdersController {
       const orderUpdate = await Orders.findByIdAndUpdate(new ObjectId(id), {
         status: "cancelled",
         isPayed: false,
+        updated_at: new Date()
       });
       await Payments.findByIdAndDelete(orderUpdate.payment);
       return ApiResponse.returnSucess().sendResponse(res);
@@ -288,6 +296,7 @@ class OrdersController {
       const process = await Orders.findByIdAndUpdate(id, {
         status: isReady ? "finished" : "pending",
         "products.$[].setupIsFinished": isReady,
+        updated_at: new Date()
       }, {
         new: true
       }).populate("client")
