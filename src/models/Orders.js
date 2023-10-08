@@ -9,6 +9,7 @@ const ordersSchema = new mongoose.Schema({
     type: ObjectId, ref: 'accounts'
   },
   createDate: { type: Date },
+  updated_at: {type: Date},
   orderType: { type: String,
     default: 'frontDesk',
     enum: {
