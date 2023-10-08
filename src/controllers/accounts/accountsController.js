@@ -13,7 +13,9 @@ class AccountsController {
         try {
             const {storeCode, status, from, to, created_by} = req.query;
             let query = {};
-            if (Validators.checkField(storeCode)) {
+            if (!Validators.checkField(storeCode)) {
+                throw new InvalidParameter("storeCode");
+            } else {
                 query.storeCode = storeCode;
             }
             if (Validators.checkField(status)) {
@@ -26,7 +28,8 @@ class AccountsController {
                 query.created_by = new ObjectId(created_by)
             }
             req.query = Accounts.find(query)
-                .populate("client");
+                .populate("client")
+                .populate("created_by", ["-establishments", "-pass"]);
             next();
         } catch (e) {
             next(e);
@@ -75,6 +78,12 @@ class AccountsController {
             next(e);
         }
     }
+
+    static async canReceiveNewOrder(id) {
+        const account = await Accounts.findById(id, {status: -1})
+        return account.status == "open";
+    }
+    
 }
 
 async function sendAccountOrders(id) {
@@ -109,7 +118,9 @@ function prepareAccountData(account) {
 
 async function getAccountData(id) {
     let account = await Accounts.findById(id)
-                .populate("client").lean();
+        .populate("client")
+        .populate("created_by", ["-establishments", "-pass"])
+        .lean();
     if (!account) {
         throw new NotFoundError("Conta não localizada");
     }
