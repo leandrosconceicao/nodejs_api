@@ -13,6 +13,7 @@ router
     // .put(Endpoints.orders, validateToken, OrdersController.update)
     .put(`${Endpoints.orders}/cancel_order`, validateToken, OrdersController.cancelOrder)
     .put(`${Endpoints.orders}/setPreparation`, validateToken, OrdersController.setPreparation)
+    .put(`${Endpoints.orders}/transfer`, OrdersController.transferOrders)
     .patch(`${Endpoints.orders}/items`, validateToken, OrdersController.pushNewItems)
     .patch(`${Endpoints.orders}/pull_item`, validateToken, OrdersController.pullItem)
     .patch(`${Endpoints.orders}/payments`, validateToken, OrdersController.addPayment)
