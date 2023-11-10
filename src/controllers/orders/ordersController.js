@@ -11,6 +11,7 @@ import PeriodGenerator from "../../utils/periodGenerator.js";
 import mongoose from "mongoose";
 import Payments from "../../models/Payments.js";
 import AccountsController from "../accounts/accountsController.js";
+import Account from "../../models/Accounts.js";
 var ObjectId = mongoose.Types.ObjectId;
 
 const telegramApi = new TelegramApi();
@@ -239,6 +240,46 @@ class OrdersController {
         updated_at: new Date()
       });
       await Payments.findByIdAndDelete(orderUpdate.payment);
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  static async transferOrders(req, res, next) {
+    try {
+      const {ordersIds, originId, destinationId} = req.body;
+      if (!Validators.checkField(ordersIds)) {
+        throw new InvalidParameter("orders");
+      }
+      if (!ordersIds.length) {
+        return ApiResponse.badRequest("Ids dos pedidos não foram informados").sendResponse(res);
+      }
+      if (!Validators.checkField(originId)) {
+        throw new InvalidParameter("originId");
+      }
+      if (!Validators.checkField(destinationId)) {
+        throw new InvalidParameter("destinationId");
+      }
+      const destinyAccount = await Account.findById(destinationId).lean();
+      const originAccount = await Account.findById(originId).lean();
+      if (originAccount.status === "finished") {
+        return ApiResponse.badRequest("Conta de origem não está aberta").sendResponse(res); 
+      }
+      if (destinyAccount.status === "finished") {
+        return ApiResponse.badRequest("Conta de destino não está aberta").sendResponse(res);
+      }
+      const ids = ordersIds.map((e) => new ObjectId(e));
+      const proccess = await Orders.updateMany({
+        _id: {
+          $in: ids
+        }
+      }, {
+        accountId: new ObjectId(destinationId)
+      });
+      if (!process.modifiedCount) {
+        return ApiResponse.badRequest("Nenhum dado foi modificado, devido aos pedidos informados não terem sido localizados.").sendResponse(res);
+      }
       return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
       next(e);
