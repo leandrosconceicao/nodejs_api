@@ -23,7 +23,7 @@ class ApiResponse extends Error {
     });
   }
 
-  static dbError(errorMessage) {
+  static serverError(errorMessage) {
     return new ApiResponse({
       message: "O servidor não conseguiu processar a requisição",
       tecnical: errorMessage.stack,
