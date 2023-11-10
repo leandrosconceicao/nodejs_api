@@ -16,7 +16,6 @@ import apps from './appsRoutes.js';
 import reports from './reportsRoutes.js';
 import bakery from './bakeryRoutes.js';
 import paymentForm from './paymentFormsRoutes.js';
-import redis from './redisRouter.js';
 import accounts from './accountRoutes.js';
 import payments from './paymentRoutes.js';
 
@@ -46,7 +45,6 @@ const router = (app) => {
         bakery,
         paymentForm,
         payments,
-        redis,
     )
 }
 
