@@ -1,5 +1,7 @@
 node_modules
 config/db.js
+config/homolog.p12
+config/producao.p12
 test.js
 config/server-config.js
 .env
