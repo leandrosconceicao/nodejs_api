@@ -32,7 +32,7 @@ function errorCatcher(err, req, res, next) {
     if (err.code == 11000) {
         return new DuplicateError(err).sendResponse(res);
     } else {    
-        return ApiResponse.dbError(err).sendResponse(res);
+        return ApiResponse.serverError(err).sendResponse(res);
     }
 }
 
