@@ -18,6 +18,7 @@ import bakery from './bakeryRoutes.js';
 import paymentForm from './paymentFormsRoutes.js';
 import accounts from './accountRoutes.js';
 import payments from './paymentRoutes.js';
+import charges from './chargesRoutes.js';
 
 const router = (app) => {
 
@@ -45,6 +46,7 @@ const router = (app) => {
         bakery,
         paymentForm,
         payments,
+        charges,
     )
 }
 

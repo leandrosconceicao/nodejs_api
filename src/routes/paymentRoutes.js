@@ -3,12 +3,12 @@ import PaymentController from '../controllers/payments/paymentController.js';
 import Endpoints from "../models/Endpoints.js";
 import validateToken from "../middlewares/tokenController.js";
 import paginationAndFilters from "../middlewares/paginationAndFilters.js";
-import PaymentsApi from "../controllers/paymentsApi/paymentsApi.js";
+import ChargesController from "../controllers/chargesController/chargesController.js";
 
 const router = express.Router();
 
 const paymentControl = new PaymentController();
-const paymentApi = new PaymentsApi();
+const paymentApi = new ChargesController();
 
 router
     .get(Endpoints.payments, validateToken, paymentControl.findAll, paginationAndFilters)
