@@ -8,6 +8,7 @@ class Endpoints {
     static add_ones = `${this.products}/add_ones`;
     static categories = '/categories';
     static orders = '/orders';
+    static charges = "/charges";
     static payments = "/payments";
     static authentication = '/authentication';
     static establishments = '/establishments';
