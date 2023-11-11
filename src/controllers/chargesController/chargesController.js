@@ -19,12 +19,44 @@ const AGENT = new https.Agent({
 const URL = process.env.PAYMENT_API;
 const PIX_KEY = process.env.PIX_KEY;
 
-class PaymentsApi {
+class ChargesController {
+
+  async findCharges(req, res, next) {
+    try {
+      // cob?inicio=2020-10-22T16:01:35Z&fim=2020-11-30T20:10:00Z
+      const TOKEN_DATA = await getOAuth();
+      if (!TOKEN_DATA) {
+        return noTokenReturn(res);
+      }
+      const {start, end} = req.query;
+      if (!Validators.checkField(start) && !Validators.checkField(end)) {
+        throw new InvalidParameter("start, end");
+      }
+      let startDate = new Date(start);
+      let endDate = new Date(end);
+      if (isNaN(startDate.getTime())) {
+        throw new InvalidParameter("start");
+      }
+      if (isNaN(endDate.getTime())) {
+        throw new InvalidParameter("end");
+      }
+      const request = await axios({
+        method: "GET",
+        url: `${URL}/v2/cob?inicio=${start}&fim=${end}`,
+        headers: setHeaders(TOKEN_DATA),
+        httpsAgent: AGENT,
+      });
+      return ApiResponse.returnSucess(request.data).sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
   async createCharge(req, res, next) {
     try {
       const TOKEN_DATA = await getOAuth();
       if (!TOKEN_DATA) {
-        return ApiResponse.badRequest("Não foi possível recuperar o token ").sendResponse(res);
+        return noTokenReturn(res);
       }
       const { value, info, expiration_date, clientData } = req.body;
       if (!Validators.checkField(value)) {
@@ -69,9 +101,9 @@ class PaymentsApi {
     try {
       const TOKEN_DATA = await getOAuth();
       if (!TOKEN_DATA) {
-        return ApiResponse.badRequest("Não foi possível recuperar o token ").sendResponse(res);
+        return noTokenReturn(res);
       }
-      let id  = req.query.id;
+      let id  = req.params.txid;
       if (!Validators.checkField(id)) {
         throw new InvalidParameter("id");
       }
@@ -82,6 +114,34 @@ class PaymentsApi {
         httpsAgent: AGENT,
       });
       return ApiResponse.returnSucess(requisition.data).sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
+  async refundPixCharge(req, res, next) {
+    try { 
+      const TOKEN_DATA = await getOAuth();
+      if (!TOKEN_DATA) {
+        return noTokenReturn(res);
+      }
+      const {e2eId, id, value} = req.body;
+      if (!Validators.checkField(e2eId)) {
+        throw new InvalidParameter("e2eId");
+      }
+      if (!Validators.checkField(id)) {
+        throw new InvalidParameter("id");
+      }
+      if (!Validators.checkField(value)) {
+        throw new InvalidParameter("value");
+      }
+      const request = axios({
+        method: "PUT",
+        url: `${URL}/v2/pix/${e2eId}/devolucao/${id}`,
+        headers: setHeaders(TOKEN_DATA),
+        httpsAgent: AGENT
+      });
+      return ApiResponse.returnSucess(request.data).sendResponse(res);
     } catch (e) {
       next(e);
     }
@@ -100,6 +160,10 @@ async function getQrCode(token, id) {
   } catch (e) {
     return undefined;
   }
+}
+
+function noTokenReturn(res) {
+  return ApiResponse.badRequest("Não foi possível recuperar o token ").sendResponse(res);
 }
 
 function setHeaders(TOKEN_DATA) {
@@ -137,4 +201,4 @@ async function getOAuth() {
   }
 }
 
-export default PaymentsApi;
+export default ChargesController;
