@@ -19,6 +19,8 @@ const AGENT = new https.Agent({
 const URL = process.env.PAYMENT_API;
 const PIX_KEY = process.env.PIX_KEY;
 
+let interval;
+
 class ChargesController {
 
   async findCharges(req, res, next) {
@@ -99,6 +101,7 @@ class ChargesController {
 
   async getCharge(req, res, next) {
     try {
+      interval = undefined;
       const TOKEN_DATA = await getOAuth();
       if (!TOKEN_DATA) {
         return noTokenReturn(res);
@@ -107,13 +110,25 @@ class ChargesController {
       if (!Validators.checkField(id)) {
         throw new InvalidParameter("id");
       }
-      const requisition = await axios({
-        method: "GET",
-        url: `${URL}/v2/cob/${id}`,
-        headers: setHeaders(TOKEN_DATA),
-        httpsAgent: AGENT,
-      });
-      return ApiResponse.returnSucess(requisition.data).sendResponse(res);
+      res.set("Content-Type", "text/event-stream");
+      res.set("Connection", "keep-alive");
+      res.set("Cache-Control", "no-cache");
+      res.set("Access-Control-Allow-Origin", "*");
+        // const requisition = await onGetPixStatus(id, TOKEN_DATA);
+        // if (requisition.data.status === "CONCLUIDA") {
+        //   res.status(200).send(`${JSON.stringify(ApiResponse.returnSucess(requisition.data))}`)
+        //   return;
+        // }
+      interval = setInterval(async () => {
+        const requisition = await onGetPixStatus(id, TOKEN_DATA);
+        console.log(requisition.data);
+        if (requisition.data.status !== "ATIVA") {
+          clearInterval(interval);
+          res.status(200).write(`${JSON.stringify(ApiResponse.returnSucess(requisition.data))}`)
+          return;
+        }
+        res.status(200).write(`${JSON.stringify(ApiResponse.returnSucess(requisition.data))}`)
+      }, 30000);
     } catch (e) {
       next(e);
     }
@@ -146,6 +161,17 @@ class ChargesController {
       next(e);
     }
   }
+}
+
+async function onGetPixStatus(id, TOKEN_DATA) {
+  let date = new Date();
+  console.log(date.toLocaleDateString());
+  return await axios({
+    method: "GET",
+    url: `${URL}/v2/cob/${id}`,
+    headers: setHeaders(TOKEN_DATA),
+    httpsAgent: AGENT,
+  });
 }
 
 async function getQrCode(token, id) {
