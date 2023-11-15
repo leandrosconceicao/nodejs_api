@@ -60,6 +60,26 @@ class AccountsController {
         }
     }
 
+    static async edit(req, res, next) {
+        try {
+            const {id, description} = req.body;
+            if (!Validators.checkField(id)) {
+                throw new InvalidParameter("id");
+            }
+            if (!Validators.checkField(description)) {
+                throw new InvalidParameter("description");
+            }
+            const EDITED_ACCOUNT = await Accounts.findByIdAndUpdate(id, {
+                $set: {
+                    description: description
+                }
+            });
+            return ApiResponse.returnSucess(EDITED_ACCOUNT).sendResponse(res);
+        } catch (e) {
+            next(e);
+        }
+    }
+
     static async manageStatus(req, res, next) {
         try {
             const {id, status} = req.body;
@@ -69,10 +89,16 @@ class AccountsController {
             if (!Validators.checkField(status)) {
                 throw new InvalidParameter("status");
             }
-            await Accounts.findByIdAndUpdate(new ObjectId(id), {status: status});
             if (status === "checkSolicitation") {
                 sendAccountOrders(id);
             }
+            if (status === "closed") {
+                let condition = await accountCanBeClosed(id);
+                if (!condition) {
+                    return ApiResponse.badRequest("Conta não pode ser fechada, há pedidos pendentes de pagamento").sendResponse(res);
+                }
+            }
+            await Accounts.findByIdAndUpdate(new ObjectId(id), {status: status});
             return ApiResponse.returnSucess().sendResponse(res);
         } catch (e) {
             next(e);
@@ -84,6 +110,19 @@ class AccountsController {
         return account.status == "open";
     }
     
+}
+
+async function accountCanBeClosed(id) {
+    const ACCOUNT = await getAccountData(id);
+    if (!ACCOUNT) {
+        return false;
+    }
+    let payments = ACCOUNT.payments;
+    let orders = ACCOUNT.orders;
+    let totalPayed = payments.reduce((a, b) => b.value.value + a, 0);
+    let products = orders.map((e) => e.products);
+    let totalOrdered = products.flat().reduce((a, b) => (b.quantity * b.unitPrice) + a, 0);
+    return totalPayed === totalOrdered;
 }
 
 async function sendAccountOrders(id) {

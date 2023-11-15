@@ -149,7 +149,7 @@ class OrdersController {
     })
       .populate("client")
       .populate("accountId", ["-payments", "-orders"])
-      .populate("userCreate", ["-establishments", "-pass"]);
+      .populate("userCreate", ["-establishments", "-pass"]).lean();
     return data;
   }
 
@@ -250,10 +250,10 @@ class OrdersController {
     try {
       const {ordersIds, originId, destinationId} = req.body;
       if (!Validators.checkField(ordersIds)) {
-        throw new InvalidParameter("orders");
+        throw new InvalidParameter("ordersIds");
       }
       if (!ordersIds.length) {
-        return ApiResponse.badRequest("Ids dos pedidos não foram informados").sendResponse(res);
+        return ApiResponse.badRequest("Ids dos pedidos são inválidos ou não foram informados").sendResponse(res);
       }
       if (!Validators.checkField(originId)) {
         throw new InvalidParameter("originId");
@@ -261,23 +261,41 @@ class OrdersController {
       if (!Validators.checkField(destinationId)) {
         throw new InvalidParameter("destinationId");
       }
-      const destinyAccount = await Account.findById(destinationId).lean();
-      const originAccount = await Account.findById(originId).lean();
-      if (originAccount.status === "finished") {
+      const destinyAccount = await Account.findById(new ObjectId(destinationId)).lean();
+      const originAccount = await Account.findById(new ObjectId(originId)).lean();
+      if (originAccount.status !== "open") {
         return ApiResponse.badRequest("Conta de origem não está aberta").sendResponse(res); 
       }
-      if (destinyAccount.status === "finished") {
+      if (destinyAccount.status !== "open") {
         return ApiResponse.badRequest("Conta de destino não está aberta").sendResponse(res);
       }
+      // for (let i = 0; i < items.length; i++) {
+      //   let item = items[i];
+      //   await Orders.updateOne({
+      //     accountId: new ObjectId(originId),
+      //     products: {$elemMatch: {_id: new ObjectId(item._id)}}
+      //   }, {
+      //     $pull: {products: {_id: new ObjectId(item._id)}}
+      //   })
+      // }
+      // const newOrder = await Orders({
+      //   storeCode: destinyAccount.storeCode,
+      //   userCreate: userCode,
+      //   products: items,
+      //   status: "pending",
+
+      // });
       const ids = ordersIds.map((e) => new ObjectId(e));
       const proccess = await Orders.updateMany({
         _id: {
           $in: ids
         }
       }, {
-        accountId: new ObjectId(destinationId)
+        $set: {
+          accountId: new ObjectId(destinationId)
+        }
       });
-      if (!process.modifiedCount) {
+      if (!proccess.modifiedCount) {
         return ApiResponse.badRequest("Nenhum dado foi modificado, devido aos pedidos informados não terem sido localizados.").sendResponse(res);
       }
       return ApiResponse.returnSucess().sendResponse(res);
