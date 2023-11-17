@@ -10,7 +10,7 @@ const chargesApi = new ChargesController();
 
 router
     .get(Endpoints.charges, chargesApi.findCharges)
-    .get(`${Endpoints.charges}/:txid`, chargesApi.getCharge)
+    .get(`${Endpoints.charges}/validate_payment/:txid`, chargesApi.validatePaymentCharge)
     .post(Endpoints.charges, chargesApi.createCharge)
     .put(`${Endpoints.charges}/refund_pix`, chargesApi.refundPixCharge)
     // .patch(Endpoints.paymentForms, paymentControl.addNewForm)
