@@ -188,6 +188,17 @@ async function getQrCode(token, id) {
   }
 }
 
+function getDefaultReq(token) {
+  return axios.create({
+    baseUrl: URL,
+    httpsAgent: AGENT,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
 function noTokenReturn(res) {
   return ApiResponse.badRequest("Não foi possível recuperar o token ").sendResponse(res);
 }
