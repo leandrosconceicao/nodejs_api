@@ -99,7 +99,7 @@ class ChargesController {
     }
   }
 
-  async getCharge(req, res, next) {
+  async validatePaymentCharge(req, res, next) {
     try {
       interval = undefined;
       const TOKEN_DATA = await getOAuth();
