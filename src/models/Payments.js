@@ -8,6 +8,7 @@ const paymentSchema = new mongoose.Schema({
     storeCode: {type: mongoose.Types.ObjectId, ref: "establishments", required: [true, "Parametro (storeCode) é obrigatório"]},
     userCreate: {type: ObjectId, ref: "users", required: [true, "Parametro (userCreate) é obrigatório"]},
     createDate: {type: Date, required: [true, "Parametro (createDate) é obrigatório"]},
+    txId: {type: String},
     value: {
         type: {
             form: String,
