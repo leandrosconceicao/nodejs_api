@@ -20,6 +20,7 @@ const URL = process.env.PAYMENT_API;
 const PIX_KEY = process.env.PIX_KEY;
 
 let interval;
+let token_data;
 
 class ChargesController {
 
@@ -161,6 +162,19 @@ class ChargesController {
       next(e);
     }
   }
+
+  async webhook(req, res) {
+    let {hmac} = req.query;
+    if (!Validators.checkField(hmac)) {
+      res.send(403);
+      return;
+    }
+    if (hmac !== process.env.GESTOR_HMAC) {
+      res.send(403);
+      return;
+    }
+    res.send(200);
+  }
 }
 
 async function onGetPixStatus(id, TOKEN_DATA) {
@@ -188,16 +202,16 @@ async function getQrCode(token, id) {
   }
 }
 
-function getDefaultReq(token) {
-  return axios.create({
-    baseUrl: URL,
-    httpsAgent: AGENT,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
-}
+// function getDefaultReq(token) {
+//   return axios.create({
+//     baseUrl: URL,
+//     httpsAgent: AGENT,
+//     headers: {
+//       Authorization: `Bearer ${token}`,
+//       'Content-Type': 'application/json'
+//     }
+//   });
+// }
 
 function noTokenReturn(res) {
   return ApiResponse.badRequest("Não foi possível recuperar o token ").sendResponse(res);
@@ -221,18 +235,24 @@ async function getOAuth() {
     var data = JSON.stringify({
       grant_type: "client_credentials",
     });
-    
-    const req = await axios({
-      method: "POST",
-      url: `${URL}/oauth/token`,
-      headers: {
-        Authorization: "Basic " + auth,
-        "Content-Type": "application/json",
-      },
-      data: data,
-      httpsAgent: AGENT,
-    });
-    return req.data;
+    let now = new Date();
+    if (now > token_data.expiration_date) {
+      const req = await axios({
+        method: "POST",
+        url: `${URL}/oauth/token`,
+        headers: {
+          Authorization: "Basic " + auth,
+          "Content-Type": "application/json",
+        },
+        data: data,
+        httpsAgent: AGENT,
+      });
+      token_data = req.data;
+      let expiration = new Date();
+      expiration.setSeconds(3200);
+      token_data.expiration_date = expiration;
+    }
+    return token_data;
   } catch (e) {
     return undefined;
   }
