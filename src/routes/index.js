@@ -11,7 +11,6 @@ import ApiResponse from "../models/ApiResponse.js";
 import events from "./eventsRoutes.js";
 import firebase from "./firebaseRoutes.js";
 import validation from "./validationsRoutes.js";
-import queue from './queueRoutes.js';
 import apps from './appsRoutes.js';
 import reports from './reportsRoutes.js';
 import bakery from './bakeryRoutes.js';
@@ -40,7 +39,6 @@ const router = (app) => {
         events,
         firebase,
         validation,
-        queue,
         apps,
         reports,
         bakery,
