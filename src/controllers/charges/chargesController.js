@@ -5,6 +5,7 @@ import * as dotenv from "dotenv";
 import axios from "axios";
 import Validators from "../../utils/utils.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
+import PixPayments from "../../models/PixPayments.js";
 
 dotenv.config();
 
@@ -61,7 +62,13 @@ class ChargesController {
       if (!TOKEN_DATA) {
         return noTokenReturn(res);
       }
-      const { value, info, expiration_date, clientData } = req.body;
+      const { value, info, expiration_date, clientData, userCreate,  storeCode} = req.body;
+      if (!Validators.checkField(userCreate)) {
+        throw new InvalidParameter("userCreate");
+      }
+      if (!Validators.checkField(storeCode)) {
+        throw new InvalidParameter("storeCode");
+      }
       if (!Validators.checkField(value)) {
         throw new InvalidParameter("value");
       }
@@ -93,7 +100,12 @@ class ChargesController {
         data: JSON.stringify(paymentData),
         httpsAgent: AGENT,
       });
-      requisition.data.payment_data = await getQrCode(TOKEN_DATA, requisition.data.loc.id)
+      requisition.data.payment_data = await getQrCode(TOKEN_DATA, requisition.data.loc.id);
+      await PixPayments({
+        storeCode: storeCode,
+        userCreate: userCreate,
+        txId: requisition.data.txid,
+      }).save();
       return ApiResponse.returnSucess(requisition.data).sendResponse(res);
     } catch (e) {
       next(e);
@@ -103,10 +115,10 @@ class ChargesController {
   async validatePaymentCharge(req, res, next) {
     try {
       interval = undefined;
-      const TOKEN_DATA = await getOAuth();
-      if (!TOKEN_DATA) {
-        return noTokenReturn(res);
-      }
+      // const TOKEN_DATA = await getOAuth();
+      // if (!TOKEN_DATA) {
+      //   return noTokenReturn(res);
+      // }
       let id  = req.params.txid;
       if (!Validators.checkField(id)) {
         throw new InvalidParameter("id");
@@ -115,21 +127,26 @@ class ChargesController {
       res.set("Connection", "keep-alive");
       res.set("Cache-Control", "no-cache");
       res.set("Access-Control-Allow-Origin", "*");
-        // const requisition = await onGetPixStatus(id, TOKEN_DATA);
-        // if (requisition.data.status === "CONCLUIDA") {
-        //   res.status(200).send(`${JSON.stringify(ApiResponse.returnSucess(requisition.data))}`)
-        //   return;
-        // }
       interval = setInterval(async () => {
-        const requisition = await onGetPixStatus(id, TOKEN_DATA);
-        console.log(requisition.data);
-        if (requisition.data.status !== "ATIVA") {
+        let pix = await PixPayments.findOne({txId: id})
+          .populate("storeCode")
+          .populate("userCreate", ["-establishments", "-pass"]).lean();
+        
+        if (pix.status === "finished") {
           clearInterval(interval);
-          res.status(200).write(`${JSON.stringify(ApiResponse.returnSucess(requisition.data))}`)
+          res.status(200).write(`${JSON.stringify(ApiResponse.returnSucess(pix))}`)
           return;
         }
-        res.status(200).write(`${JSON.stringify(ApiResponse.returnSucess(requisition.data))}`)
-      }, 30000);
+        res.status(200).write(`${JSON.stringify(ApiResponse.returnSucess(pix))}`)
+        // const requisition = await onGetPixStatus(id, TOKEN_DATA);
+        // console.log(requisition.data);
+        // if (requisition.data.status !== "ATIVA") {
+        //   clearInterval(interval);
+        //   res.status(200).write(`${JSON.stringify(ApiResponse.returnSucess(requisition.data))}`)
+        //   return;
+        // }
+        // res.status(200).write(`${JSON.stringify(ApiResponse.returnSucess(requisition.data))}`)
+      }, 5000);
     } catch (e) {
       next(e);
     }
@@ -166,27 +183,51 @@ class ChargesController {
   async webhook(req, res) {
     let {hmac} = req.query;
     if (!Validators.checkField(hmac)) {
-      res.send(403);
+      res.sendStatus(403);
       return;
     }
     if (hmac !== process.env.GESTOR_HMAC) {
-      res.send(403);
+      res.sendStatus(403);
       return;
     }
-    res.send(200);
+    let reqBody = req.body;
+    console.log(reqBody);
+    let pixReq = reqBody.pix[0];
+    await PixPayments.findOneAndUpdate({
+      txId: pixReq.txid
+    }, {
+      $set: {
+        status: "finished",
+        endToEndId: pixReq.endToEndId
+      }
+    });
+
+    // {
+    //   pix: [
+    //     {
+    //       endToEndId: 'E18236120202311182123s00bc591ac4',
+    //       txid: 'f144150a3720440fb38aad663f72d399',
+    //       chave: 'eb56c1ac-31f6-478b-a9ed-974e3b369aca',
+    //       valor: '0.10',
+    //       horario: '2023-11-18T21:23:39.000Z'
+    //     }
+    //   ]
+    // }
+      
+    res.sendStatus(200);
   }
 }
 
-async function onGetPixStatus(id, TOKEN_DATA) {
-  let date = new Date();
-  console.log(date.toLocaleDateString());
-  return await axios({
-    method: "GET",
-    url: `${URL}/v2/cob/${id}`,
-    headers: setHeaders(TOKEN_DATA),
-    httpsAgent: AGENT,
-  });
-}
+// async function onGetPixStatus(id, TOKEN_DATA) {
+//   let date = new Date();
+//   console.log(date.toLocaleDateString());
+//   return await axios({
+//     method: "GET",
+//     url: `${URL}/v2/cob/${id}`,
+//     headers: setHeaders(TOKEN_DATA),
+//     httpsAgent: AGENT,
+//   });
+// }
 
 async function getQrCode(token, id) {
   try {
@@ -236,7 +277,7 @@ async function getOAuth() {
       grant_type: "client_credentials",
     });
     let now = new Date();
-    if (now > token_data.expiration_date) {
+    if (!token_data || now > token_data.expiration_date) {
       const req = await axios({
         method: "POST",
         url: `${URL}/oauth/token`,
