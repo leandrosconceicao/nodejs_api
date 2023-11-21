@@ -4,6 +4,7 @@ var ObjectId = mongoose.Types.ObjectId;
 const pixPaymentsSchema = new mongoose.Schema({
     storeCode: {type: ObjectId, ref: "establishments", required: [true, "Parametro (storeCode) é obrigatório"]},
     createDate: {type: Date, default: new Date()},
+    updated_at: {type: Date},
     userCreate: {type: ObjectId, ref: "users", required: [true, "Parametro (userCreate) é obrigatório"]},
     txId: {type: String, required: true},
     endToEndId: {type: String},
