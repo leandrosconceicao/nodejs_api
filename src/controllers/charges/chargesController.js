@@ -126,6 +126,28 @@ class ChargesController {
     }
   }
 
+  async cancelPixCharge(req, res, next) {
+    try {
+      const {txId} = req.body;
+      if (!Validators.checkField(txId)) {
+        throw new InvalidParameter("txId");
+      }
+      let process = await PixPayments.updateOne({
+        txId: txId
+      }, {
+        $set: {
+          status: "cancelled"
+        }
+      });
+      if (!process.modifiedCount) {
+        return ApiResponse.badRequest("Nenhum dado modificado, verifique os termos da busca.").sendResponse(res);
+      }
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
+
   async refundPixCharge(req, res, next) {
     try { 
       const TOKEN_DATA = await getOAuth();
