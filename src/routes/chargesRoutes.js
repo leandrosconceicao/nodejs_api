@@ -13,6 +13,7 @@ router
     .get(`${Endpoints.charges}/validate_payment/:txid`, validateToken, chargesApi.validatePaymentCharge)
     .post(Endpoints.charges, validateToken, chargesApi.createCharge)
     .put(`${Endpoints.charges}/refund_pix`, validateToken, chargesApi.refundPixCharge)
+    .patch(`${Endpoints.charges}/cancel_pix_charge`, chargesApi.cancelPixCharge)
     .post(`${Endpoints.charges}/webhook(/pix)?`, chargesApi.webhook)
     // .patch(Endpoints.paymentForms, paymentControl.addNewForm)
     // .delete(Endpoints.paymentForms, paymentControl.del)
