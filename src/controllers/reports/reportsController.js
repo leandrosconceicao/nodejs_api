@@ -157,26 +157,13 @@ class ReportsControllers {
       // query.isPayed = true;
       const orders = await Orders.find(query)
         .select({
-          products: 1,
-          payment: 1,
+          products: 1
         })
-        .populate("payment")
         .lean();
       const data = prepareData(orders, product);
       const total = getTotal(data);
-      const totalPay = getTotalPay(data);
-      const forms = getForms(data);
-      // const diff = getTotalDiff(data);
-      // const filterOrders = data.map((e) => {
-      //   delete e.diffPay;
-      //   return e;
-      // })
       return ApiResponse.returnSucess({
         total: total,
-        totalPay: totalPay,
-        // difference: diff,
-        payments: forms,
-        // orders: filterOrders,
       }).sendResponse(res);
     } catch (e) {
       next(e);
@@ -205,87 +192,23 @@ function prepareData(orders, product) {
   orders.forEach((order) => {
     let or = {};
     let prods = [];
-    let diffPay = [];
     or.order = order._id;
-    or.payment = order.payment;
     order.products.forEach((prod) => {
       if (product.includes(prod.productId.toString())) {
         prods.push(prod);
-      } else {
-        diffPay.push(prod.quantity * prod.unitPrice);
       }
     });
-    or.diffPay = diffPay;
     or.products = prods;
     data.push(or);
   });
   return data;
 }
 
-function getForms(data) {
-  let debit = [];
-  let credit = [];
-  let money = [];
-  let pix = [];
-  data.filter((el) => el.payment !== undefined).map((e) => e.payment).forEach((pay) => {
-    if (pay.value.form == 'debit') {
-      debit.push(pay.value);
-    } else if (pay.value.form == 'credit') {
-      credit.push(pay.value);
-    } else if (pay.value.form == 'money') {
-      money.push(pay.value);
-    } else {
-      pix.push(pay.value);
-    }
-  })
-  return [
-    {
-      form: "debit",
-      total: getValues(debit),
-      payments: debit
-    },
-    {
-      form: "credit",
-      total: getValues(credit),
-      payments: credit
-    },
-    {
-      form: "money",
-      total: getValues(money),
-      payments: money
-    },
-    {
-      form: "pix",
-      total: getValues(pix),
-      payments: pix
-    }
-  ];
-}
-
-function getValues(data) {
-  return data.reduce((total, element) => total + (element.value), 0);
-}
-
-// function getTotalDiff(data) {
-//   return data.reduce(
-//     (total, value) => total + value.diffPay.reduce((tot, vl) => tot + vl, 0),
-//     0
-//   );
-// }
-
 function getTotal(data) {
   return data.reduce(
     (total, value) =>
       total +
       value.products.reduce((tot, vl) => tot + vl.quantity * vl.unitPrice, 0),
-    0
-  );
-}
-
-function getTotalPay(data) {
-  return data.reduce(
-    (total, value) =>
-      total + (value.payment === undefined ? 0 : value.payment.value.value),
     0
   );
 }
