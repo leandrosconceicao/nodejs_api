@@ -120,7 +120,7 @@ class PaymentController {
         return process;
     }
 
-    static async getPayments(accountId) {
+    static async getAccountPayments(accountId) {
         const data = await Payments.find({accountId: new ObjectId(accountId)}).populate('userCreate', ["-establishments", "-pass"]);
         return data;
     }
