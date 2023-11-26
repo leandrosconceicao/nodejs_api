@@ -132,13 +132,7 @@ class ChargesController {
       if (!Validators.checkField(txId)) {
         throw new InvalidParameter("txId");
       }
-      let process = await PixPayments.updateOne({
-        txId: txId
-      }, {
-        $set: {
-          status: "cancelled"
-        }
-      });
+      let process = await ChargesController.cancelPixCharge(txId)
       if (!process.modifiedCount) {
         return ApiResponse.badRequest("Nenhum dado modificado, verifique os termos da busca.").sendResponse(res);
       }
@@ -146,6 +140,16 @@ class ChargesController {
     } catch (e) {
       next(e);
     }
+  }
+
+  static async cancelPixCharge(txId) {
+    return PixPayments.updateOne({
+      txId: txId
+    }, {
+      $set: {
+        status: "cancelled"
+      }
+    });
   }
 
   async refundPixCharge(req, res, next) {
