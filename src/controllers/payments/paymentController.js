@@ -5,6 +5,7 @@ import InvalidParameters from "../errors/InvalidParameter.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import PeriodGenerator from "../../utils/periodGenerator.js";
 import mongoose from "mongoose";
+import ChargesController from "../charges/chargesController.js";
 var ObjectId = mongoose.Types.ObjectId;
 
 class PaymentController {
@@ -72,13 +73,37 @@ class PaymentController {
 
     async rollbackPayments(req, res, next) {
         try {
-            const {payments} = req.body;
+            const {payments, userId} = req.body;
+            if (!Validators.checkField(userId)) {
+                throw new InvalidParameters("userId");
+            }
             if (!Validators.checkField(payments)) {
                 throw new InvalidParameters("payments");
             }
-            await Payments.deleteMany({
+            let pays = await Payments.find({
                 _id: {"$in": payments}
+            }).lean();
+            let filtredData = pays.filter((e) => !e.refunded);
+            if (!filtredData.length) {
+                return ApiResponse.badRequest("Pagamentos já foram estornados").sendResponse(res);
+            }
+            await Payments.updateMany({
+                _id: {"$in": filtredData.map((e) => e._id)}
+            }, {
+                $set: {
+                    refunded: true,
+                    userUpdated: new ObjectId(userId),
+                    updateDate: new Date()
+                }
             });
+            await cancelCharge(filtredData)
+            filtredData.forEach((e) => {
+                delete e._id;
+                e.value.value = e.value.value * (-1);
+                e.refunded = true
+            })
+            let refunds = filtredData.map((e) =>  Payments(e));
+            await Payments.insertMany(refunds);
             return ApiResponse.returnSucess().sendResponse(res);
         } catch (e) {
             next(e);
@@ -98,6 +123,16 @@ class PaymentController {
     static async getPayments(accountId) {
         const data = await Payments.find({accountId: new ObjectId(accountId)}).populate('userCreate', ["-establishments", "-pass"]);
         return data;
+    }
+}
+
+async function cancelCharge(filtredData) {
+    for (let i = 0; i < filtredData.length; i++) {
+        let data = filtredData[i];
+        const TX_ID = data.value.txId;
+        if (TX_ID) {
+            await ChargesController.cancelPixCharge(TX_ID)
+        }
     }
 }
 
