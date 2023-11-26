@@ -13,7 +13,7 @@
                 "<node_internals>/**"
             ],
             "restart": true,
-            "program": "${workspaceFolder}\\socket.js"
+            "program": "${workspaceFolder}\\server.js"
         }
     ]
 }
