@@ -164,7 +164,7 @@ async function getAccountData(id) {
         throw new NotFoundError("Conta não localizada");
     }
     const orders = await OrdersController.getOrders(id);
-    const payments = await PaymentController.getPayments(id);
+    const payments = await PaymentController.getAccountPayments(id);
     account.orders = orders;
     account.payments = payments;
     return account;
