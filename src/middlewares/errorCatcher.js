@@ -5,6 +5,10 @@ import Jwt from "jsonwebtoken";
 import ValidationError from '../controllers/errors/ValidationError.js';
 import DuplicateError from '../controllers/errors/DuplicateError.js';
 import InvalidParameter from '../controllers/errors/InvalidParameter.js';
+import LogsController from '../controllers/logs/logsControllers.js';
+import { AxiosError } from 'axios';
+
+const logsControl = new LogsController();
 
 // eslint-disable-next-line no-unused-vars
 function errorCatcher(err, req, res, next) {
@@ -31,9 +35,15 @@ function errorCatcher(err, req, res, next) {
     }
     if (err.code == 11000) {
         return new DuplicateError(err).sendResponse(res);
-    } else {    
-        return ApiResponse.serverError(err).sendResponse(res);
     }
+    if (err instanceof AxiosError) {
+        logsControl.saveReqLog(req, err.response.data);
+        if (err.response.status < 499) {
+            return ApiResponse.badRequest(err.response.data.mensagem).sendResponse(res);
+        }
+        return ApiResponse.serverError(err.response.data.mensagem).sendResponse(res);
+    }
+    return ApiResponse.serverError(err).sendResponse(res);  
 }
 
 export default errorCatcher;
