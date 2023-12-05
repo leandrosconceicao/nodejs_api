@@ -6,7 +6,7 @@ import paginationAndFilters from "../middlewares/paginationAndFilters.js";
 const router = express.Router();
 
 router
-    .get(Endpoints.establishments,  EstablishmentsController.findAll, paginationAndFilters)
+    .get(Endpoints.establishments, validateToken, EstablishmentsController.findAll, paginationAndFilters)
     .get(`${Endpoints.establishments}/:id`, EstablishmentsController.findOne)
     .post(Endpoints.establishments, validateToken, EstablishmentsController.add)
     .delete(Endpoints.establishments, validateToken, EstablishmentsController.del)
