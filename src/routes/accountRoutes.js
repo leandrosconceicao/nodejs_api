@@ -7,8 +7,8 @@ import paginationAndFilters from "../middlewares/paginationAndFilters.js";
 const router = express.Router();
 
 router
-    .get(Endpoints.accounts, AccountsController.findAll, paginationAndFilters)
-    .get(`${Endpoints.accounts}/:id`, AccountsController.findOne)
+    .get(Endpoints.accounts, validateToken, AccountsController.findAll, paginationAndFilters)
+    .get(`${Endpoints.accounts}/:id`, validateToken, AccountsController.findOne)
     .post(Endpoints.accounts, validateToken, AccountsController.post)
     .put(Endpoints.accounts, validateToken, AccountsController.edit)
     .put(`${Endpoints.accounts}/manage_status`, validateToken, AccountsController.manageStatus)

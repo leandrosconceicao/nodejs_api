@@ -7,10 +7,10 @@ const router = express.Router();
 
 router
     .get(endpoints.clients, validateToken, ClientController.findAll, paginationAndFilters)
-    .get(`${endpoints.clients}/:id`, ClientController.findOne)
-    .post(endpoints.clients, ClientController.add)
+    .get(`${endpoints.clients}/:id`, validateToken, ClientController.findOne)
+    .post(endpoints.clients, validateToken, ClientController.add)
     .post(`${endpoints.clients}/authentication`, ClientController.authentication)
-    .put(endpoints.clients, ClientController.update)
+    .put(endpoints.clients, validateToken, ClientController.update)
     .delete(endpoints.clients, validateToken, ClientController.delete)
 
 export default router;

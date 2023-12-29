@@ -39,8 +39,8 @@ class AccountsController {
     static async findOne(req, res, next) {
         try {
             const id = req.params.id;
-            if (!Validators.checkField(id)) {
-                throw new InvalidParameter('id');
+            if (!Validators.isObjectId(id)) {
+                throw new InvalidParameter("id");
             }
             const account = await getAccountData(id);
             return ApiResponse.returnSucess(account).sendResponse(res);
@@ -97,6 +97,7 @@ class AccountsController {
                 if (!condition) {
                     return ApiResponse.badRequest("Conta não pode ser fechada, há pedidos pendentes de pagamento").sendResponse(res);
                 }
+                OrdersController.finishOrdersOnCloseAccount(id)
             }
             await Accounts.findByIdAndUpdate(new ObjectId(id), {status: status});
             return ApiResponse.returnSucess().sendResponse(res);

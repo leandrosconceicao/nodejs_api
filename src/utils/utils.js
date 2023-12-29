@@ -1,3 +1,5 @@
+import {isValidObjectId} from "mongoose";
+
 class Validators {
     static checkField(field) {
         if (field) {
@@ -10,6 +12,10 @@ class Validators {
     static checkType(value, type) {
         const tp = typeof value;
         return tp === type;
+    }
+
+    static isObjectId(value) {
+        return isValidObjectId(value);
     }
 }
 

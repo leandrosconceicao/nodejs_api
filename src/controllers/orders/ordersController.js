@@ -369,6 +369,22 @@ class OrdersController {
       return next(e);
     }
   }
+
+  static async finishOrdersOnCloseAccount(accountId) {
+    try {
+      await Orders.updateMany({
+        accountId: new ObjectId(accountId)
+      }, {
+        $set: {
+          status: "finished",
+          "products.$[].setupIsFinished": true,
+          updated_at: new Date()
+        }
+      })
+    } catch (e) {
+      console.log(e);
+    }
+  }
 }
 
 async function alertUser(order) {
