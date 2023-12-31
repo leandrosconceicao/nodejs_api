@@ -1,5 +1,5 @@
 import ApiResponse from "../../models/ApiResponse.js";
-import Payments from "../../models/Payments.js";
+import {Payments} from "../../models/Payments.js";
 import Validators from "../../utils/utils.js";
 import InvalidParameters from "../errors/InvalidParameter.js";
 import NotFoundError from "../errors/NotFoundError.js";
@@ -111,6 +111,12 @@ class PaymentController {
     }
 
     static async savePayment(paymentData) {
+        if (paymentData.value.txId) {
+            const payment = await Payments.findOne({
+                "value.txId": paymentData.value.txId
+            })
+            return payment;
+        }
         const payment = new Payments(paymentData);
         payment.createDate = new Date();
         if (Validators.checkField(paymentData.accountId)) {
