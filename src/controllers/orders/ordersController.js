@@ -289,15 +289,16 @@ class OrdersController {
       if (!proccess.modifiedCount) {
         return ApiResponse.badRequest("Nenhum dado foi modificado, devido aos pedidos informados não terem sido localizados.").sendResponse(res);
       }
-      logControl.saveReqLog({
-        req: req, 
-        action: {
+      logControl.saveReqLog(
+        req, 
+        null,
+        {
           orderId: new ObjectId(originAccount._id),
-          description: `Transferência de pedidos da conta ${originAccount.description} para a conta ${destinyAccount.description}`,
+          description: `Transferência de pedidos da conta (${originAccount.description}) para a conta (${destinyAccount.description})`,
           storeCode: new ObjectId(originAccount.storeCode),
           userCreate: new ObjectId(userCode)
         }
-      });
+      );
       return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
       next(e);
