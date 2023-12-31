@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { paymentSchema } from "./Payments.js";
 var ObjectId = mongoose.Types.ObjectId;
 
 const pixPaymentsSchema = new mongoose.Schema({
@@ -14,7 +15,8 @@ const pixPaymentsSchema = new mongoose.Schema({
           values: ['processing', 'finished', 'cancelled'],
           message: "O tipo {VALUE} não é um valor permitido"
         }
-      }
+      },
+    paymentData: paymentSchema
 })
 
 const PixPayments = mongoose.model("pixPayments", pixPaymentsSchema);
