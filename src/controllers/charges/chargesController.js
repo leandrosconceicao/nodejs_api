@@ -6,9 +6,12 @@ import axios from "axios";
 import Validators from "../../utils/utils.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
 import PixPayments from "../../models/PixPayments.js";
+import {Payments} from "../../models/Payments.js";
+import LogsController from "../logs/logsControllers.js";
 
 dotenv.config();
 
+const logControl = new LogsController();
 const certificado = fs.readFileSync(process.env.CERTIFICATE_PATH);
 
 
@@ -61,7 +64,7 @@ class ChargesController {
       if (!TOKEN_DATA) {
         return noTokenReturn(res);
       }
-      const { value, info, expiration_date, clientData, userCreate,  storeCode} = req.body;
+      const { value, info, expiration_date, clientData, userCreate,  storeCode, payment} = req.body;
       if (!Validators.checkField(userCreate)) {
         throw new InvalidParameter("userCreate");
       }
@@ -104,6 +107,7 @@ class ChargesController {
         storeCode: storeCode,
         userCreate: userCreate,
         txId: requisition.data.txid,
+        paymentData: new Payments(payment)
       }).save();
       return ApiResponse.returnSucess(requisition.data).sendResponse(res);
     } catch (e) {
@@ -181,29 +185,45 @@ class ChargesController {
   }
 
   async webhook(req, res) {
-    let {hmac} = req.query;
-    if (!Validators.checkField(hmac)) {
-      res.sendStatus(403);
-      return;
+    try {
+      let {hmac} = req.query;
+      if (!Validators.checkField(hmac)) {
+        res.sendStatus(403);
+        return;
+      }
+      if (hmac !== process.env.GESTOR_HMAC) {
+        res.sendStatus(403);
+        return;
+      }
+      let reqBody = req.body;
+      console.log(reqBody);
+      let pixReq = reqBody.pix[0];
+      paymentSave(req, pixReq);
+      res.sendStatus(200);
+    } catch (e) {
+      logControl.saveReqLog(req, e);
+      res.sendStatus(200);
     }
-    if (hmac !== process.env.GESTOR_HMAC) {
-      res.sendStatus(403);
-      return;
-    }
-    let reqBody = req.body;
-    console.log(reqBody);
-    let pixReq = reqBody.pix[0];
-    await PixPayments.findOneAndUpdate({
+  }
+}
+
+async function paymentSave(req, pixReq) {
+  try {
+    let pix = await PixPayments.findOneAndUpdate({
       txId: pixReq.txid
     }, {
       $set: {
         status: "finished",
         endToEndId: pixReq.endToEndId,
-        updated_at: new Date()
+        updated_at: new Date(),
       }
-    });
-      
-    res.sendStatus(200);
+    }).lean();
+    delete pix.paymentData._id;
+    pix.paymentData.value.txId = pixReq.txid;
+    const newPayment = new Payments(pix.paymentData);
+    await newPayment.save();
+  } catch (e) {
+    logControl.saveReqLog(req, e);
   }
 }
 
