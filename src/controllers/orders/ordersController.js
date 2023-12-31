@@ -9,10 +9,14 @@ import NotFoundError from "../errors/NotFoundError.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
 import PeriodGenerator from "../../utils/periodGenerator.js";
 import mongoose from "mongoose";
-import Payments from "../../models/Payments.js";
+import {Payments} from "../../models/Payments.js";
 import AccountsController from "../accounts/accountsController.js";
 import Account from "../../models/Accounts.js";
+import LogsController from "../logs/logsControllers.js";
+
 var ObjectId = mongoose.Types.ObjectId;
+
+const logControl = new LogsController();
 
 const telegramApi = new TelegramApi();
 
@@ -115,7 +119,7 @@ class OrdersController {
       }
       let order = new Orders(body);
       order.createDate = new Date();
-      if (Validators.checkField(body.orderType) && body.orderType == "frontDesk") {
+      if (Validators.checkField(body.orderType) && body.orderType === "frontDesk") {
         const payment = await PaymentController.savePayment(body.payment);
         order.payment = payment._id;
       }
@@ -248,7 +252,7 @@ class OrdersController {
 
   static async transferOrders(req, res, next) {
     try {
-      const {ordersIds, originId, destinationId} = req.body;
+      const {ordersIds, originId, destinationId, userCode} = req.body;
       if (!Validators.checkField(ordersIds)) {
         throw new InvalidParameter("ordersIds");
       }
@@ -261,6 +265,9 @@ class OrdersController {
       if (!Validators.checkField(destinationId)) {
         throw new InvalidParameter("destinationId");
       }
+      if (!Validators.checkField(userCode)) {
+        throw new InvalidParameter("userCode");
+      }
       const destinyAccount = await Account.findById(new ObjectId(destinationId)).lean();
       const originAccount = await Account.findById(new ObjectId(originId)).lean();
       if (originAccount.status !== "open") {
@@ -269,22 +276,6 @@ class OrdersController {
       if (destinyAccount.status !== "open") {
         return ApiResponse.badRequest("Conta de destino não está aberta").sendResponse(res);
       }
-      // for (let i = 0; i < items.length; i++) {
-      //   let item = items[i];
-      //   await Orders.updateOne({
-      //     accountId: new ObjectId(originId),
-      //     products: {$elemMatch: {_id: new ObjectId(item._id)}}
-      //   }, {
-      //     $pull: {products: {_id: new ObjectId(item._id)}}
-      //   })
-      // }
-      // const newOrder = await Orders({
-      //   storeCode: destinyAccount.storeCode,
-      //   userCreate: userCode,
-      //   products: items,
-      //   status: "pending",
-
-      // });
       const ids = ordersIds.map((e) => new ObjectId(e));
       const proccess = await Orders.updateMany({
         _id: {
@@ -298,6 +289,15 @@ class OrdersController {
       if (!proccess.modifiedCount) {
         return ApiResponse.badRequest("Nenhum dado foi modificado, devido aos pedidos informados não terem sido localizados.").sendResponse(res);
       }
+      logControl.saveReqLog({
+        req: req, 
+        action: {
+          orderId: new ObjectId(originAccount._id),
+          description: `Transferência de pedidos da conta ${originAccount.description} para a conta ${destinyAccount.description}`,
+          storeCode: new ObjectId(originAccount.storeCode),
+          userCreate: new ObjectId(userCode)
+        }
+      });
       return ApiResponse.returnSucess().sendResponse(res);
     } catch (e) {
       next(e);
