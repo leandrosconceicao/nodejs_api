@@ -8,6 +8,7 @@ import InvalidParameter from "../errors/InvalidParameter.js";
 import PixPayments from "../../models/PixPayments.js";
 import {Payments} from "../../models/Payments.js";
 import LogsController from "../logs/logsControllers.js";
+import Establishments from "../../models/Establishments.js"
 
 dotenv.config();
 
@@ -21,7 +22,7 @@ const AGENT = new https.Agent({
 });
 
 const URL = process.env.PAYMENT_API;
-const PIX_KEY = process.env.PIX_KEY;
+// const PIX_KEY = process.env.PIX_KEY;
 
 let token_data;
 
@@ -74,6 +75,10 @@ class ChargesController {
       if (!Validators.checkField(value)) {
         throw new InvalidParameter("value");
       }
+      const establishmentData = await Establishments.findById(storeCode, {pixKey: 1, _id: 0});
+      if (!establishmentData.pixKey) {
+        return ApiResponse.badRequest("Estabelecimento não possui chave pix cadastrada");
+      }
       const paymentData = {
         calendario: {
           expiracao: expiration_date ?? 3600,
@@ -81,7 +86,7 @@ class ChargesController {
         valor: {
           original: `${value}`,
         },
-        chave: PIX_KEY,
+        chave: establishmentData.pixKey,
         solicitacaoPagador: info ?? "Cobrança dos serviços prestados.",
       };
       if (Validators.checkField(clientData)) {
