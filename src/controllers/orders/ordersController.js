@@ -130,7 +130,7 @@ class OrdersController {
         }
       }
       let or = await order.save();
-      await OrdersController.updateId(or);
+      await OrdersController.updateId(or, body.storeCode);
       const newOrder = await Orders.findById(or.id)
         .populate("client")
         .populate("accountId", ["-payments", "-orders"])
@@ -157,9 +157,11 @@ class OrdersController {
     return data;
   }
 
-  static async updateId(order) {
+  static async updateId(order, storeCode) {
     let count = 0;
-    let counter = await Counter.find({});
+    let counter = await Counter.find({
+      storeCode: new ObjectId(storeCode)
+    });
     if (!counter.length) {
       count += 1;
     } else {
@@ -172,7 +174,9 @@ class OrdersController {
       }
     }
     await Orders.findByIdAndUpdate(order.id, { pedidosId: count });
-    await Counter.updateMany({}, { seq_value: count, createDate: new Date()}, {
+    await Counter.updateMany({
+      storeCode: new ObjectId(storeCode)
+    }, { seq_value: count, createDate: new Date()}, {
       upsert: true
     });
   }
