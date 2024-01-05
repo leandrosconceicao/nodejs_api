@@ -13,6 +13,7 @@ import {Payments} from "../../models/Payments.js";
 import AccountsController from "../accounts/accountsController.js";
 import Account from "../../models/Accounts.js";
 import LogsController from "../logs/logsControllers.js";
+import establishments from "../../models/Establishments.js";
 
 var ObjectId = mongoose.Types.ObjectId;
 
@@ -395,9 +396,12 @@ class OrdersController {
 async function alertUser(order) {
   const isAccount = order.orderType == "account";
   if (isAccount) {
-    const user = await Users.findById(order.userCreate);
-    const msg = `<b><i>${user.username}</i></b>, pedido <b>${order.pedidosId}</b> da conta (<b>${order.accountId.description}</b>) está pronto.`;
-    telegramApi.notifyUsers(msg);
+    const user = await Users.findById(order.userCreate).populate("establishments").lean();
+    const establishment = await establishments.findById(order.storeCode).select({telegramChatId: -1, _id: 0}).lean();
+    if (establishment.telegramChatId) {
+      const msg = `<b><i>${user.username}</i></b>, pedido <b>${order.pedidosId}</b> da conta (<b>${order.accountId.description}</b>) está pronto.`;
+      telegramApi.notifyUsers(msg, establishment.telegramChatId);
+    }
   }
 }
 
