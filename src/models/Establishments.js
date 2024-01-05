@@ -8,7 +8,8 @@ const establishmentsSchema = new mongoose.Schema({
     ownerId: {type: String, required: [true, "Parametro (ownerId) é obrigatório"]},
     logo: {type: String, default: ""},
     url: {type: String, default: ""},
-    pixKey: {type: String}
+    pixKey: {type: String},
+    telegramChatId: {type: String},
 }, {
     versionKey: false,
 })
