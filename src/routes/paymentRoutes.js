@@ -4,6 +4,7 @@ import Endpoints from "../models/Endpoints.js";
 import validateToken from "../middlewares/tokenController.js";
 import paginationAndFilters from "../middlewares/paginationAndFilters.js";
 import ChargesController from "../controllers/charges/chargesController.js";
+import BillingPeriodsController from "../controllers/billing_periods/billingPeriodsController.js";
 
 const router = express.Router();
 
@@ -12,6 +13,9 @@ const paymentApi = new ChargesController();
 
 router
     .get(Endpoints.payments, validateToken, paymentControl.findAll, paginationAndFilters)
+    .get(Endpoints.billingPeriods, BillingPeriodsController.findAll)
+    .post(`${Endpoints.billingPeriods}`, BillingPeriodsController.open)
+    .patch(`${Endpoints.billingPeriods}`, BillingPeriodsController.close)
     .post(`${Endpoints.payments}/create_charge`, paymentApi.createCharge)
     // .get(`${Endpoints.payments}/get_charge`, paymentApi.getCharge)
     .get(`${Endpoints.payments}/:id`, validateToken, paymentControl.findOne)
