@@ -8,6 +8,7 @@ const router = express.Router();
 
 router
     .get(Endpoints.apps, validateToken, AppsController.findAll, paginationAndFilters)
+    .get(`${Endpoints.apps}/validate_app`, AppsController.validateVersion)
     .get(`${Endpoints.apps}/:id`, validateToken, AppsController.findOne)
     .post(Endpoints.apps, validateToken, AppsController.add)
     .put(Endpoints.apps, validateToken, AppsController.update)
