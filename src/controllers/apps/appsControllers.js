@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import InvalidParameter from "../errors/InvalidParameter.js";
 import ApiResponse from '../../models/ApiResponse.js';
 import Apps from '../../models/Apps.js';
 import Validators from '../../utils/utils.js';
@@ -52,6 +53,7 @@ class AppsController {
             if (!id) {
                 throw new mongoose.Error.ValidationError();
             }
+            delete data._id;
             const dt = await Apps.findByIdAndUpdate(id, {$set: data});
             if (!dt) {
                 return res.status(400).json(ApiResponse.returnError("Nenhum dado atualizado"));
@@ -77,6 +79,33 @@ class AppsController {
                 }
             }
         } catch (e) {   
+            next(e);
+        }
+    }
+
+    static async validateVersion(req, res, next) {
+        try {
+            const {appName, version} = req.query;
+            if (!Validators.checkField(appName)) {
+                throw new InvalidParameter("appName");
+            }
+            if (!Validators.checkField(version)) {
+                throw new InvalidParameter("version");
+            }
+            const app = await Apps.findOne({
+                appsName: appName,
+            });
+            if (!app) {
+                return ApiResponse.badRequest("App não localizado").sendResponse(res);
+            }
+            const versionCheck = parseInt(version.replaceAll(".", ""));
+            const serverVersion = parseInt(app.version.replaceAll(".", ""));
+            const hasNewVersion =  serverVersion > versionCheck;
+            if (hasNewVersion) {
+                return ApiResponse.badRequest("Há uma nova versão do aplivativo disponível para atualização").sendResponse(res);
+            }
+            return ApiResponse.returnSucess().sendResponse(res);
+        } catch (e) {
             next(e);
         }
     }
