@@ -10,6 +10,7 @@ class Endpoints {
     static orders = '/orders';
     static charges = "/charges";
     static payments = "/payments";
+    static billingPeriods = `${this.payments}/billing_periods`;
     static authentication = '/authentication';
     static establishments = '/establishments';
     static users = '/users';
