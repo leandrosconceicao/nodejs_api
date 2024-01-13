@@ -16,7 +16,7 @@ class ReportsControllers {
       let { storeCode, from, to, saller, type, product } = req.query;
       let query = {};
       if (!Validators.checkField(storeCode)) {
-        throw new InvalidParameter('storeCode');
+        throw new InvalidParameter("storeCode");
       }
       query.storeCode = new ObjectId(storeCode);
       if (Validators.checkField(from) && Validators.checkField(to)) {
@@ -86,16 +86,11 @@ class ReportsControllers {
       ]);
       if (!sales) {
         throw new NotFoundError("Busca não localizou dados");
-      } else {
-        let totalValue = 0;
-        let data = {};
-        for (let i = 0; i < sales.length; i++) {
-          totalValue += sales[i].total;
-        }
-        data.totalValue = totalValue;
-        data.orders = sales.map((e) => e);
-        return ApiResponse.returnSucess(data).sendResponse(res);
       }
+      return ApiResponse.returnSucess({
+        totalValue: sales.reduce((a, b) => a + b.total, 0),
+        orders: sales
+      }).sendResponse(res);
     } catch (e) {
       next(e);
     }
@@ -103,7 +98,7 @@ class ReportsControllers {
 
   static async quantifySalesByProduct(req, res, next) {
     try {
-      let { storeCode, from, to, saller, type, product, category,} = req.query;
+      let { storeCode, from, to, saller, type, product, category } = req.query;
       let query = {};
       if (!Validators.checkField(storeCode)) {
         throw new InvalidParameter("storeCode");
@@ -129,8 +124,11 @@ class ReportsControllers {
           }
         }
         product = prodList.map((e) => e.toString());
-      } else if (Validators.checkField(product) && !Validators.checkField(category)) {
-        const isList = (typeof product) == 'object';
+      } else if (
+        Validators.checkField(product) &&
+        !Validators.checkField(category)
+      ) {
+        const isList = typeof product == "object";
         query.products = {
           $elemMatch: {
             productId: {
@@ -169,17 +167,56 @@ class ReportsControllers {
       next(e);
     }
   }
+
+  static async averagePreparationTime(req, res, next) {
+    try {
+      const { from, to } = req.query;
+      if (!Validators.checkField(from)) {
+        throw new InvalidParameter("from");
+      }
+      if (!Validators.checkField(to)) {
+        throw new InvalidParameter("to");
+      }
+      const data = await Orders.find(
+        {
+          createDate: new PeriodGenerator(from, to).buildQuery(),
+          status: "finished",
+          updated_at: { $ne: null },
+        },
+        { createDate: 1, updated_at: 1, pedidosId: 1, _id: 0 }
+      ).lean();
+      data.forEach((e) => {
+        e.elapsedTimeInMinutes = (e.updated_at - e.createDate) / 60000;
+      });
+      // let quantify = {};
+      const avgTime =
+        data.reduce((a, b) => {
+          return a + b.elapsedTimeInMinutes;
+        }, 0) / data.length;
+      return ApiResponse.returnSucess({ avgTime: avgTime }).sendResponse(res);
+    } catch (e) {
+      next(e);
+    }
+  }
 }
 
 async function getProductsFromCategory(category) {
-  const isList = (typeof category) == 'object';
-  const query = isList ? {
-    isActive: true,
-    category: {$in: category.map((e) => {new ObjectId(e)})}
-  } : {category: new ObjectId(category), isActive: true}
-  const products = await Products.find(query).select({
-    _id: 1
-  }).lean();
+  const isList = typeof category == "object";
+  const query = isList
+    ? {
+        isActive: true,
+        category: {
+          $in: category.map((e) => {
+            new ObjectId(e);
+          }),
+        },
+      }
+    : { category: new ObjectId(category), isActive: true };
+  const products = await Products.find(query)
+    .select({
+      _id: 1,
+    })
+    .lean();
   return products;
 }
 
