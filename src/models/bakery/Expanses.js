@@ -5,7 +5,7 @@ const configSchema = new mongoose.Schema({
     storeCode: {type: String, required: true},
     description: {type: String, required: true},
     value: {type: mongoose.Types.Decimal128, default: 0},
-    createdAt: {type: Date, default: new Date()},
+    createdAt: {type: Date, default: () => { return new Date() }},
 })
 
 const BakeryExpanse = mongoose.model('bakeryExpanse', configSchema)

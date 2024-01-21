@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import orderLogSchema from "../models/orders/order_logs.js";
 
 const logsSchema = new mongoose.Schema({
-    created_at: {type: Date, default: new Date()},
+    created_at: {type: Date, default: () => { return new Date() }},
     route: {type: String},
     request_headers: {type: Object},
     request_body: {type: Object},

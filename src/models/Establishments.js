@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const establishmentsSchema = new mongoose.Schema({
     name: {type: String, required: [true, "Parametro (name) é obrigatório"] },
-    createDate: {type: Date, default: new Date()},
+    createDate: {type: Date, default: () => { return new Date() }},
     location: {type: String, default: ""},   
     isOpen: {type: Boolean, default: false},
     ownerId: {type: String, required: [true, "Parametro (ownerId) é obrigatório"]},

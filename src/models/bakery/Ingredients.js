@@ -6,7 +6,7 @@ const ingredientsBody = {
     storeCode: {type: String, required: true},
     unitOfMeasurement: {type: String, default: "un"},
     quantInPackage: {type: Number, default: 1},
-    createdAt: {type: Date, default: new Date()},
+    createdAt: {type: Date, default: () => { return new Date() }},
     cost: {type: Number, default: 0.0},
 };
 const ingredientsSchema = new mongoose.Schema(ingredientsBody)

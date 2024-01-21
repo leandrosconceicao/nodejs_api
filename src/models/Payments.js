@@ -9,7 +9,7 @@ const paymentSchema = new mongoose.Schema({
     refunded: {type: Boolean, default: false},
     storeCode: {type: mongoose.Types.ObjectId, ref: "establishments", required: [true, "Parametro (storeCode) é obrigatório"]},
     userCreate: {type: ObjectId, ref: "users", required: [true, "Parametro (userCreate) é obrigatório"]},
-    createDate: {type: Date, default: new Date(), required: [true, "Parametro (createDate) é obrigatório"]},
+    createDate: {type: Date, default: () => { return new Date() }, required: [true, "Parametro (createDate) é obrigatório"]},
     userUpdated: {type: ObjectId, ref: "users",},
     updateDate: {type: Date},
     value: {

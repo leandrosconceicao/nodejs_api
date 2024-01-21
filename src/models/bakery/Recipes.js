@@ -5,7 +5,7 @@ const recipeSchema = new mongoose.Schema({
     _id: {type: String},
     storeCode: {type: String, required: true},
     name: {type: String, required: true},
-    createdAt: {type: Date, default: new Date()},
+    createdAt: {type: Date, default: () => { return new Date() }},
     ingredients: {
         type: [ingredientsBody]
     }
