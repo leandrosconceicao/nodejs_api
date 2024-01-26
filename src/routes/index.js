@@ -18,6 +18,7 @@ import paymentForm from './paymentFormsRoutes.js';
 import accounts from './accountRoutes.js';
 import payments from './paymentRoutes.js';
 import charges from './chargesRoutes.js';
+import cardPayment from "./cardPaymentRoutes.js";
 
 const router = (app) => {
 
@@ -45,6 +46,7 @@ const router = (app) => {
         paymentForm,
         payments,
         charges,
+        cardPayment
     )
 }
 
