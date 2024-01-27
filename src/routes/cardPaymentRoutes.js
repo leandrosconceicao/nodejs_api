@@ -1,8 +1,10 @@
 import express from "express";
 import CardPaymentController from "../controllers/payments/cardPaymentController.js";
 
+const endpoint = "/card_payment";
+
 export default express.Router()
-    .get("/card_payment/:id", CardPaymentController.getPayment)
-    .post("/card_payment", CardPaymentController.createPayment)
-    .delete("/card_payment", CardPaymentController.cancelPayment)
-    .patch("/card_payment/device_operation_mode", CardPaymentController.setDeviceOperationMode)
+    .get(`${endpoint}/:id`, CardPaymentController.getPayment)
+    .post(endpoint, CardPaymentController.createPayment)
+    .delete(endpoint, CardPaymentController.cancelPayment)
+    .patch(`${endpoint}/device_operation_mode`, CardPaymentController.setDeviceOperationMode)
