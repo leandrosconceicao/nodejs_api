@@ -7,6 +7,7 @@ import DuplicateError from '../controllers/errors/DuplicateError.js';
 import InvalidParameter from '../controllers/errors/InvalidParameter.js';
 import LogsController from '../controllers/logs/logsControllers.js';
 import { AxiosError } from 'axios';
+import MercadoPagoError from '../controllers/errors/MercadopagoError.js';
 
 const logsControl = new LogsController();
 
@@ -35,6 +36,9 @@ function errorCatcher(err, req, res, next) {
     }
     if (err.code == 11000) {
         return new DuplicateError(err).sendResponse(res);
+    }
+    if (err instanceof MercadoPagoError) {
+        return err.sendResponse(res);
     }
     if (err instanceof AxiosError) {
         logsControl.saveReqLog(req, err.response.data);
