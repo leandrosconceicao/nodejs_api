@@ -15,6 +15,7 @@ const paymentSchema = new mongoose.Schema({
     value: {
         type: {
             txId: {type: String, default: undefined},
+            cardPaymentId: {type: String, default: undefined},
             form: String,
             value: Number,
         },
