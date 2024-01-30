@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 import { paymentSchema } from "./Payments.js";
-// var ObjectId = mongoose.Types.ObjectId;
+var ObjectId = mongoose.Types.ObjectId;
 
 export default mongoose.model("cardPaymentsControl", new mongoose.Schema({
     // _id: {type: ObjectId, unique: true},
-    createDate: {type: Date, default: () => { return new Date() }},
+    // createDate: {type: Date, default: () => { return new Date() }},
     updated_at: {type: Date},
-    paymentId: {type: String, required: true, unique: true},
+    paymentId: {type: ObjectId, required: true, unique: true},
     status: { type: String,
         default: 'processing',
         enum: {
