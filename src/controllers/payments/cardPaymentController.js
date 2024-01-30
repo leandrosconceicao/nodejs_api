@@ -1,18 +1,27 @@
 import ApiResponse from "../../models/ApiResponse.js";
 import mongoose from "mongoose";
 import { validate as uuidValidate } from "uuid";
+// import crypto from "crypto";
 import * as dotenv from "dotenv";
 import axios from "axios";
 import InvalidParameter from "../errors/InvalidParameter.js";
 import MercadoPagoError from "../errors/MercadopagoError.js";
 import CardPayments from "../../models/CardPayments.js";
 import { Payments } from "../../models/Payments.js";
+// import LogController from "../logs/logsControllers.js";
 // import { paymentSchema } from "../../models/Payments.js";
 
 var ObjectId = mongoose.Types.ObjectId;
 
 var isValidObjectId = mongoose.isValidObjectId;
 
+// const logControl = new LogController();
+
+const webHookPayStatus = {
+  FINISHED: "finished",
+  CANCELLED: "cancelled",
+  ERROR: "cancelled",
+};
 
 dotenv.config();
 
@@ -42,7 +51,8 @@ export default class cardPaymentController {
 
   static async createPayment(req, res, next) {
     try {
-      const { amount, description, type, storeCode, userCreate, accountId} = req.body;
+      const { amount, description, type, storeCode, userCreate, accountId } =
+        req.body;
       if (!isValidObjectId(userCreate)) {
         throw new InvalidParameter("userCreate");
       }
@@ -62,7 +72,7 @@ export default class cardPaymentController {
       }
       if (!types.includes(type)) {
         throw new InvalidParameter(
-          `#Informado: type => [${type}], valores necessários ${types.join(
+          `#Informado: type => [${type}], valores permitidos ${types.join(
             " ou "
           )}`
         );
@@ -81,30 +91,29 @@ export default class cardPaymentController {
       const newId = new ObjectId();
 
       paymentIntent.additional_info = {
-        "external_reference": newId.toString(),
+        external_reference: newId.toString(),
         print_on_terminal: true,
       };
+      const payIntentRequest = await request(
+        "POST",
+        `${ENDPOINT}/devices/${DEVICE_ID}/payment-intents`,
+        paymentIntent
+      );
       const cardPayment = await new CardPayments({
         status: "processing",
-        paymentId: new ObjectId(newId),
+        paymentId: newId,
         paymentData: new Payments({
           storeCode: storeCode,
           userCreate: userCreate,
           value: {
+            cardPaymentId: payIntentRequest.data.id,
             form: type == "debit_card" ? "debit" : "credit",
-            value: amount * 0.01
+            value: amount * 0.01,
           },
           accountId: accountId,
-          
-        })
+        }),
       }).save();
-      // const payIntentRequest = await request(
-      //   "POST",
-      //   `${ENDPOINT}/devices/${DEVICE_ID}/payment-intents`,
-      //   paymentIntent
-      // );
       return ApiResponse.returnSucess(cardPayment).sendResponse(res);
-      // return ApiResponse.returnSucess(payIntentRequest.data).sendResponse(res);
     } catch (e) {
       next(e);
     }
@@ -119,11 +128,20 @@ export default class cardPaymentController {
       if (typeof id !== "string") {
         throw new InvalidParameter(`ID => valor informado: ${id}`);
       }
-      const payIntentCancel = await request(
+      await request(
         "DELETE",
         `${ENDPOINT}/devices/${DEVICE_ID}/payment-intents/${id}`
       );
-      return ApiResponse.returnSucess(payIntentCancel.data).sendResponse(res);
+      const process = await CardPayments.findOneAndUpdate(
+        {
+          "paymentData.value.cardPaymentId": id,
+        },
+        {
+          status: "cancelled",
+          updated_at: new Date()
+        }
+      );
+      return ApiResponse.returnSucess(process).sendResponse(res);
     } catch (e) {
       next(e);
     }
@@ -147,6 +165,101 @@ export default class cardPaymentController {
       return ApiResponse.returnSucess(opModeRequest.data).sendResponse(res);
     } catch (e) {
       next(e);
+    }
+  }
+
+  static async webhook(req, res) {
+    try {
+      const { state, id } = req.body;
+      let status = webHookPayStatus[state];
+      const cardPayment = await CardPayments.findOneAndUpdate(
+        {
+          "paymentData.value.cardPaymentId": id,
+        },
+        {
+          status: status,
+          updated_at: new Date()
+        }
+      ).lean();
+      const newPayment = cardPayment.paymentData;
+      delete newPayment._id;
+      await new Payments(newPayment).save();
+      return ApiResponse.returnSucess().sendResponse(res);
+    } catch (e) {
+      return ApiResponse.returnSucess().sendResponse(res);
+    }
+  }
+
+  static checkPayment(req, res) {
+    // let interValID
+    try {
+      const id = req.params.id;
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Connection', 'keep-alive');
+      res.flushHeaders(); // flush the headers to establish SSE with client
+
+      // let counter = 0;
+      console.log("Iniciando checagem de pagamento");
+      const process = CardPayments.watch([
+        {
+          $match: {
+            "operationType": "update",
+            "fullDocument.paymentData.value.cardPaymentId": id
+          },
+        }
+      ], { fullDocument: 'updateLookup' });
+      
+      process.on("change", (value) => {
+        const doc = value.fullDocument;
+        res.write(`data: ${JSON.stringify(ApiResponse.returnSucess(doc))}\n\n`); // res.write() instead of res.send()
+        if (doc.status != "processing") {
+          // res.write(`data: ${JSON.stringify(ApiResponse.returnSucess(doc))}\n\n`); // res.write() instead of res.send()
+          // clearInterval(interValID);
+          res.end();
+          // return;
+        }
+      });
+
+      process.on("close", () => {
+        res.end();
+      })
+      // process.on("close", () => { 
+      //   res.end();
+      // })
+      // interValID = setInterval(async () => {
+      //   // counter++;
+      //   // if (counter >= 10) {
+      //   //   clearInterval(interValID);
+      //   //   res.end(); // terminates SSE session
+      //   //   return;
+      //   // }
+      //   const data = await CardPayments.findOne({
+      //     "paymentData.value.cardPaymentId": id
+      //   }).lean();
+        // if (data.status != "processing") {
+        //   res.write(`data: ${JSON.stringify(ApiResponse.returnSucess(data))}\n\n`); // res.write() instead of res.send()
+        //   clearInterval(interValID);
+        //   res.end();
+        //   return;
+        // }
+      //   // res.write(`data: ${JSON.stringify({num: counter})}\n\n`); // res.write() instead of res.send()
+      //   res.write(`data: ${JSON.stringify(ApiResponse.returnSucess(data))}\n\n`); // res.write() instead of res.send()
+      // }, 10000);
+      
+      // If client closes connection, stop sending events
+      res.on('close', () => {
+        process.close();
+        // console.log('client dropped me');
+        // clearInterval(interValID);
+        res.end();
+      });
+    } catch (e) {
+      // process.close();
+      // clearInterval(interValID);
+      res.write(`data: ${JSON.stringify(ApiResponse.serverError(e))}\n\n`); // res.write() instead of res.send()
+      res.end();
     }
   }
 }
