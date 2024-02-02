@@ -10,7 +10,7 @@ const chargesApi = new ChargesController();
 
 router
     .get(Endpoints.charges, validateToken, chargesApi.findCharges)
-    .get(`${Endpoints.charges}/validate_payment/:txid`, validateToken, chargesApi.validatePaymentCharge)
+    .get(`${Endpoints.charges}/validate_payment/:txid`, chargesApi.validatePaymentChargeV2)
     .post(Endpoints.charges, validateToken, chargesApi.createCharge)
     .put(`${Endpoints.charges}/refund_pix`, validateToken, chargesApi.refundPixCharge)
     .patch(`${Endpoints.charges}/cancel_pix_charge`, chargesApi.cancelPixCharge)
