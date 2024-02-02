@@ -1,20 +1,20 @@
-import ApiResponse from "../../models/ApiResponse.js";
 import https from "https";
 import fs from "fs";
 import * as dotenv from "dotenv";
 import axios from "axios";
+import ApiResponse from "../../models/ApiResponse.js";
 import Validators from "../../utils/utils.js";
 import InvalidParameter from "../errors/InvalidParameter.js";
 import PixPayments from "../../models/PixPayments.js";
-import {Payments} from "../../models/Payments.js";
+import { Payments } from "../../models/Payments.js";
 import LogsController from "../logs/logsControllers.js";
-import Establishments from "../../models/Establishments.js"
+import Establishments from "../../models/Establishments.js";
+import NotFoundError from "../errors/NotFoundError.js";
 
 dotenv.config();
 
 const logControl = new LogsController();
 const certificado = fs.readFileSync(process.env.CERTIFICATE_PATH);
-
 
 const AGENT = new https.Agent({
   pfx: certificado,
@@ -27,7 +27,6 @@ const URL = process.env.PAYMENT_API;
 let token_data;
 
 class ChargesController {
-
   async findCharges(req, res, next) {
     try {
       // cob?inicio=2020-10-22T16:01:35Z&fim=2020-11-30T20:10:00Z
@@ -35,12 +34,12 @@ class ChargesController {
       if (!TOKEN_DATA) {
         return noTokenReturn(res);
       }
-      const {start, end} = req.query;
+      const { start, end } = req.query;
       if (!Validators.checkField(start) && !Validators.checkField(end)) {
         throw new InvalidParameter("start, end");
       }
-      let startDate = new Date(start);
-      let endDate = new Date(end);
+      const startDate = new Date(start);
+      const endDate = new Date(end);
       if (isNaN(startDate.getTime())) {
         throw new InvalidParameter("start");
       }
@@ -65,7 +64,9 @@ class ChargesController {
       if (!TOKEN_DATA) {
         return noTokenReturn(res);
       }
-      const { value, info, expiration_date, clientData, userCreate,  storeCode, payment} = req.body;
+      const {
+        value, info, expiration_date, clientData, userCreate, storeCode, payment,
+      } = req.body;
       if (!Validators.checkField(userCreate)) {
         throw new InvalidParameter("userCreate");
       }
@@ -75,7 +76,7 @@ class ChargesController {
       if (!Validators.checkField(value)) {
         throw new InvalidParameter("value");
       }
-      const establishmentData = await Establishments.findById(storeCode, {pixKey: 1, _id: 0});
+      const establishmentData = await Establishments.findById(storeCode, { pixKey: 1, _id: 0 });
       if (!establishmentData.pixKey) {
         return ApiResponse.badRequest("Estabelecimento não possui chave pix cadastrada");
       }
@@ -91,10 +92,10 @@ class ChargesController {
       };
       if (Validators.checkField(clientData)) {
         if (
-          Validators.checkField(clientData.cgc) &&
-          Validators.checkField(clientData.name)
+          Validators.checkField(clientData.cgc)
+          && Validators.checkField(clientData.name)
         ) {
-          paymentData["devedor"] = {
+          paymentData.devedor = {
             cpf: clientData.cgc,
             nome: clientData.name,
           };
@@ -109,10 +110,10 @@ class ChargesController {
       });
       requisition.data.payment_data = await getQrCode(TOKEN_DATA, requisition.data.loc.id);
       await PixPayments({
-        storeCode: storeCode,
-        userCreate: userCreate,
+        storeCode,
+        userCreate,
         txId: requisition.data.txid,
-        paymentData: new Payments(payment)
+        paymentData: new Payments(payment),
       }).save();
       return ApiResponse.returnSucess(requisition.data).sendResponse(res);
     } catch (e) {
@@ -122,11 +123,11 @@ class ChargesController {
 
   async validatePaymentCharge(req, res, next) {
     try {
-        let id  = req.params.txid;
-        if (!Validators.checkField(id)) {
-          throw new InvalidParameter("id");
-        }
-      let pix = await PixPayments.findOne({txId: id})
+      const id = req.params.txid;
+      if (!Validators.checkField(id)) {
+        throw new InvalidParameter("id");
+      }
+      const pix = await PixPayments.findOne({ txId: id })
         .populate("storeCode")
         .populate("userCreate", ["-establishments", "-pass"]);
       return ApiResponse.returnSucess(pix).sendResponse(res);
@@ -135,13 +136,72 @@ class ChargesController {
     }
   }
 
+  async validatePaymentChargeV2(req, res) {
+    try {
+      const id = req.params.txid;
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Connection", "keep-alive");
+      res.flushHeaders();
+
+      if (!id.trimRight()) {
+        res.write(`error: ${JSON.stringify(new NotFoundError("Dados não localizados"))}\n\n`);
+        res.end();
+        return;
+      }
+      const register = await PixPayments.findOne({
+        txId: id,
+      });
+      if (!register) {
+        res.write(`error: ${JSON.stringify(new NotFoundError("Dados não localizados"))}\n\n`);
+        res.end();
+        return;
+      }
+
+      console.log("Iniciando validação do pix")
+      const process = PixPayments.watch([
+        {
+          $match: {
+            "operationType": "update",
+            "fullDocument.txId": id,
+          },
+        },
+      ], { fullDocument: "updateLookup" });
+
+      process.on("change", (value) => {
+        const doc = value.fullDocument;
+        res.write(`data: ${JSON.stringify(ApiResponse.returnSucess(doc))}\n\n`);
+        // if (doc.status != "processing") {
+        // }
+        res.end();
+        // process.close();
+        return;
+      });
+
+      process.on("error", () => {
+        res.write(`error: ${JSON.stringify(ApiResponse.serverError())}`);
+        process.close();
+        res.end();
+      })
+
+      process.on("close", () => {
+        process.close();
+        res.end();
+      });
+    } catch (e) {
+      // res.write(`${JSON.stringify(ApiResponse.serverError(e))}\n\n`); // res.write() instead of res.send()
+      res.end();
+    }
+  }
+
   async cancelPixCharge(req, res, next) {
     try {
-      const {txId} = req.body;
+      const { txId } = req.body;
       if (!Validators.checkField(txId)) {
         throw new InvalidParameter("txId");
       }
-      let process = await ChargesController.cancelPixCharge(txId)
+      const process = await ChargesController.cancelPixCharge(txId);
       if (!process.modifiedCount) {
         return ApiResponse.badRequest("Nenhum dado modificado, verifique os termos da busca.").sendResponse(res);
       }
@@ -153,21 +213,21 @@ class ChargesController {
 
   static async cancelPixCharge(txId) {
     return PixPayments.updateOne({
-      txId: txId
+      txId,
     }, {
       $set: {
-        status: "cancelled"
-      }
+        status: "cancelled",
+      },
     });
   }
 
   async refundPixCharge(req, res, next) {
-    try { 
+    try {
       const TOKEN_DATA = await getOAuth();
       if (!TOKEN_DATA) {
         return noTokenReturn(res);
       }
-      const {e2eId, id, value} = req.body;
+      const { e2eId, id, value } = req.body;
       if (!Validators.checkField(e2eId)) {
         throw new InvalidParameter("e2eId");
       }
@@ -181,7 +241,7 @@ class ChargesController {
         method: "PUT",
         url: `${URL}/v2/pix/${e2eId}/devolucao/${id}`,
         headers: setHeaders(TOKEN_DATA),
-        httpsAgent: AGENT
+        httpsAgent: AGENT,
       });
       return ApiResponse.returnSucess(request.data).sendResponse(res);
     } catch (e) {
@@ -191,7 +251,7 @@ class ChargesController {
 
   async webhook(req, res) {
     try {
-      let {hmac} = req.query;
+      const { hmac } = req.query;
       if (!Validators.checkField(hmac)) {
         res.sendStatus(403);
         return;
@@ -200,9 +260,9 @@ class ChargesController {
         res.sendStatus(403);
         return;
       }
-      let reqBody = req.body;
+      const reqBody = req.body;
       console.log(reqBody);
-      let pixReq = reqBody.pix[0];
+      const pixReq = reqBody.pix[0];
       paymentSave(req, pixReq);
       res.sendStatus(200);
     } catch (e) {
@@ -214,14 +274,14 @@ class ChargesController {
 
 async function paymentSave(req, pixReq) {
   try {
-    let pix = await PixPayments.findOneAndUpdate({
-      txId: pixReq.txid
+    const pix = await PixPayments.findOneAndUpdate({
+      txId: pixReq.txid,
     }, {
       $set: {
         status: "finished",
         endToEndId: pixReq.endToEndId,
         updated_at: new Date(),
-      }
+      },
     }).lean();
     delete pix.paymentData._id;
     pix.paymentData.value.txId = pixReq.txid;
@@ -252,7 +312,7 @@ async function getQrCode(token, id) {
 //     httpsAgent: AGENT,
 //     headers: {
 //       Authorization: `Bearer ${token}`,
-//       'Content-Type': 'application/json'
+//       "Content-Type": "application/json"
 //     }
 //   });
 // }
@@ -263,36 +323,35 @@ function noTokenReturn(res) {
 
 function setHeaders(TOKEN_DATA) {
   return {
-    Authorization: "Bearer " + TOKEN_DATA.access_token,
+    Authorization: `Bearer ${TOKEN_DATA.access_token}`,
     "Content-Type": "application/json",
-  }
+  };
 }
 
 async function getOAuth() {
   try {
-
-    var data_credentials = process.env.CLIENT_ID + ":" + process.env.CLIENT_SECRET;
+    const data_credentials = `${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`;
 
     // Codificando as credenciais em base64
-    var auth = Buffer.from(data_credentials).toString("base64");
+    const auth = Buffer.from(data_credentials).toString("base64");
 
-    var data = JSON.stringify({
+    const data = JSON.stringify({
       grant_type: "client_credentials",
     });
-    let now = new Date();
+    const now = new Date();
     if (!token_data || now > token_data.expiration_date) {
       const req = await axios({
         method: "POST",
         url: `${URL}/oauth/token`,
         headers: {
-          Authorization: "Basic " + auth,
+          Authorization: `Basic ${auth}`,
           "Content-Type": "application/json",
         },
-        data: data,
+        data,
         httpsAgent: AGENT,
       });
       token_data = req.data;
-      let expiration = new Date();
+      const expiration = new Date();
       expiration.setSeconds(3200);
       token_data.expiration_date = expiration;
     }
